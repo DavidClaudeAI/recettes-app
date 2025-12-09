@@ -9,7 +9,8 @@
       "Bash(node -e:*)",
       "Bash(cat:*)",
       "Bash(npm run build:*)",
-      "WebFetch(domain:www.julieandrieu.com)"
+      "WebFetch(domain:www.julieandrieu.com)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

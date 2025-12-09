@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { getRecipeWithMeta, deleteRecipe as deleteFromStorage } from '../services/storage'
+  import { getRecipeWithMeta } from '../services/dataService'
   import { deleteRecipe, updateMetadata, addHistoryEntry } from '../stores/recipes'
   import type { RecipeWithMeta, RecipeStatus } from '../types'
   import StarRating from './StarRating.svelte'

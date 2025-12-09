@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { updateRecipe } from '../stores/recipes'
-  import { getRecipe } from '../services/storage'
+  import { getRecipe } from '../services/dataService'
   import type { Ingredient, Recipe } from '../types'
 
   interface Props {

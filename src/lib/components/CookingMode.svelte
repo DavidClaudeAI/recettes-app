@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte'
-  import { getRecipe } from '../services/storage'
+  import { getRecipe } from '../services/dataService'
   import type { Recipe } from '../types'
 
   interface Props {

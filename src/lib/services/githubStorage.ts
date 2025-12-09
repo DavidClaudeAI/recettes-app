@@ -65,8 +65,10 @@ async function githubFetch(
 }
 
 // Get file content from GitHub
-async function getFile(config: GitHubConfig, path: string): Promise<GitHubFile | null> {
-  const response = await githubFetch(config, `/contents/${path}?ref=${config.branch}`)
+async function getFile(config: GitHubConfig, path: string, noCache = false): Promise<GitHubFile | null> {
+  // Add timestamp to prevent caching when needed
+  const cacheBuster = noCache ? `&_t=${Date.now()}` : ''
+  const response = await githubFetch(config, `/contents/${path}?ref=${config.branch}${cacheBuster}`)
 
   if (response.status === 404) {
     return null
@@ -157,8 +159,8 @@ const FILES = {
 const shaCache = new Map<string, string>()
 
 // Generic data operations
-async function getData<T>(config: GitHubConfig, fileKey: keyof typeof FILES): Promise<T[]> {
-  const file = await getFile(config, FILES[fileKey])
+async function getData<T>(config: GitHubConfig, fileKey: keyof typeof FILES, noCache = false): Promise<T[]> {
+  const file = await getFile(config, FILES[fileKey], noCache)
 
   if (!file) {
     return []
@@ -184,8 +186,8 @@ async function saveData<T>(
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      // Always get fresh SHA to avoid conflicts
-      const existingFile = await getFile(config, FILES[fileKey])
+      // Always get fresh SHA to avoid conflicts (noCache=true)
+      const existingFile = await getFile(config, FILES[fileKey], true)
       const sha = existingFile?.sha
 
       await saveFile(config, FILES[fileKey], content, message, sha)
@@ -304,8 +306,8 @@ export async function saveAllRecipes(config: GitHubConfig, recipes: Recipe[]): P
 
 // ============ METADATA ============
 
-export async function getAllMetadata(config: GitHubConfig): Promise<RecipeMetadata[]> {
-  return getData<RecipeMetadata>(config, 'metadata')
+export async function getAllMetadata(config: GitHubConfig, noCache = false): Promise<RecipeMetadata[]> {
+  return getData<RecipeMetadata>(config, 'metadata', noCache)
 }
 
 export async function getMetadata(config: GitHubConfig, id: string): Promise<RecipeMetadata | undefined> {
@@ -316,7 +318,8 @@ export async function getMetadata(config: GitHubConfig, id: string): Promise<Rec
 export async function saveMetadata(config: GitHubConfig, meta: RecipeMetadata, maxRetries = 3): Promise<void> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      const metadata = await getAllMetadata(config)
+      // Use noCache=true to get fresh data and avoid stale SHA conflicts
+      const metadata = await getAllMetadata(config, true)
       const index = metadata.findIndex(m => m.id === meta.id)
 
       if (index >= 0) {
@@ -381,8 +384,8 @@ export async function getAllRecipesWithMeta(config: GitHubConfig): Promise<Recip
 
 // ============ PLANNING ============
 
-export async function getAllPlanning(config: GitHubConfig): Promise<PlanningEntry[]> {
-  return getData<PlanningEntry>(config, 'planning')
+export async function getAllPlanning(config: GitHubConfig, noCache = false): Promise<PlanningEntry[]> {
+  return getData<PlanningEntry>(config, 'planning', noCache)
 }
 
 export async function getPlanningForWeek(config: GitHubConfig, weekStart: string): Promise<PlanningEntry[]> {
@@ -393,7 +396,8 @@ export async function getPlanningForWeek(config: GitHubConfig, weekStart: string
 export async function savePlanningEntry(config: GitHubConfig, entry: PlanningEntry, maxRetries = 3): Promise<void> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      const planning = await getAllPlanning(config)
+      // Use noCache=true to get fresh data and avoid stale SHA conflicts
+      const planning = await getAllPlanning(config, true)
       const index = planning.findIndex(p => p.id === entry.id)
 
       if (index >= 0) {
@@ -423,8 +427,8 @@ export async function deletePlanningEntry(config: GitHubConfig, id: string): Pro
 
 // ============ SHOPPING LISTS ============
 
-export async function getAllShoppingLists(config: GitHubConfig): Promise<ShoppingList[]> {
-  return getData<ShoppingList>(config, 'shoppingLists')
+export async function getAllShoppingLists(config: GitHubConfig, noCache = false): Promise<ShoppingList[]> {
+  return getData<ShoppingList>(config, 'shoppingLists', noCache)
 }
 
 export async function getShoppingList(config: GitHubConfig, id: string): Promise<ShoppingList | undefined> {
@@ -435,7 +439,8 @@ export async function getShoppingList(config: GitHubConfig, id: string): Promise
 export async function saveShoppingList(config: GitHubConfig, list: ShoppingList, maxRetries = 3): Promise<void> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      const lists = await getAllShoppingLists(config)
+      // Use noCache=true to get fresh data and avoid stale SHA conflicts
+      const lists = await getAllShoppingLists(config, true)
       const index = lists.findIndex(l => l.id === list.id)
 
       if (index >= 0) {

@@ -9,6 +9,7 @@
     type ShoppingItem,
     type ShoppingListStatus
   } from '../services/dataService'
+  import { secureImageUrl } from '../services/recipeParser'
   import { recipes } from '../stores/recipes'
   import type { RecipeWithMeta } from '../types'
 
@@ -552,7 +553,7 @@
               onclick={() => toggleRecipeSelection(recipe.id)}
             >
               {#if recipe.image}
-                <img src={recipe.image} alt="" class="recipe-thumb" />
+                <img src={secureImageUrl(recipe.image)} alt="" class="recipe-thumb" />
               {:else}
                 <div class="recipe-thumb-placeholder"></div>
               {/if}

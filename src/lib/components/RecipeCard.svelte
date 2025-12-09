@@ -1,11 +1,14 @@
 <script lang="ts">
   import type { RecipeWithMeta } from '../types'
+  import { secureImageUrl } from '../services/recipeParser'
 
   interface Props {
     recipe: RecipeWithMeta
   }
 
   let { recipe }: Props = $props()
+
+  const imageUrl = $derived(secureImageUrl(recipe.image))
 
   const statusLabels = {
     'to-test': 'À tester',
@@ -33,9 +36,9 @@
 </script>
 
 <article class="recipe-card">
-  {#if recipe.image}
+  {#if imageUrl}
     <a href="#/recipes/{recipe.id}" class="card-image">
-      <img src={recipe.image} alt={recipe.title} />
+      <img src={imageUrl} alt={recipe.title} />
     </a>
   {/if}
   <div class="card-body">
@@ -76,6 +79,7 @@
 
     <div class="card-actions">
       <a href="#/recipes/{recipe.id}" class="btn-view">Voir</a>
+      <a href="#/recipes/{recipe.id}/cook" class="btn-cook" title="Mode cuisine">👨‍🍳</a>
     </div>
   </div>
 </article>
@@ -190,10 +194,12 @@
     margin-top: auto;
     padding-top: 0.5rem;
     border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 0.5rem;
   }
 
   .btn-view {
-    display: block;
+    flex: 1;
     text-align: center;
     padding: 0.5rem;
     background: #10b981;
@@ -206,5 +212,22 @@
 
   .btn-view:hover {
     background: #059669;
+  }
+
+  .btn-cook {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    padding: 0.5rem;
+    background: #f59e0b;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    transition: background 0.2s;
+  }
+
+  .btn-cook:hover {
+    background: #d97706;
   }
 </style>

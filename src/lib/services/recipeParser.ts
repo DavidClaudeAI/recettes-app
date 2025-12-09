@@ -1,5 +1,17 @@
 import type { Ingredient } from '../types'
 
+// Upgrade HTTP URLs to HTTPS to avoid mixed content issues
+export function secureImageUrl(url: string | undefined): string | undefined {
+  if (!url) return url
+  // Skip data URLs (base64)
+  if (url.startsWith('data:')) return url
+  // Upgrade HTTP to HTTPS
+  if (url.startsWith('http://')) {
+    return url.replace('http://', 'https://')
+  }
+  return url
+}
+
 // Decode HTML entities like &#39; &amp; etc.
 function decodeHtmlEntities(text: string): string {
   if (!text) return text
@@ -335,6 +347,9 @@ export async function fetchAndParseRecipe(
     const base64Image = await fetchImageAsBase64(recipe.image)
     if (base64Image) {
       recipe.image = base64Image
+    } else {
+      // If base64 conversion fails, at least upgrade to HTTPS
+      recipe.image = secureImageUrl(recipe.image)
     }
   }
 

@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { v4 as uuidv4 } from 'uuid'
   import { getPlanningForWeek, savePlanningEntry, deletePlanningEntry } from '../services/dataService'
+  import { secureImageUrl } from '../services/recipeParser'
   import { recipes } from '../stores/recipes'
   import type { PlanningEntry, MealSlot, RecipeWithMeta } from '../types'
 
@@ -159,7 +160,7 @@
               {#if meal && recipe}
                 <div class="meal-card">
                   {#if recipe.image}
-                    <img src={recipe.image} alt="" class="meal-image" />
+                    <img src={secureImageUrl(recipe.image)} alt="" class="meal-image" />
                   {/if}
                   <span class="meal-title">{recipe.title}</span>
                   <button
@@ -204,7 +205,7 @@
           {#each filteredRecipes as recipe}
             <button class="recipe-option" onclick={() => selectRecipe(recipe.id)}>
               {#if recipe.image}
-                <img src={recipe.image} alt="" class="recipe-thumb" />
+                <img src={secureImageUrl(recipe.image)} alt="" class="recipe-thumb" />
               {:else}
                 <div class="recipe-thumb-placeholder"></div>
               {/if}

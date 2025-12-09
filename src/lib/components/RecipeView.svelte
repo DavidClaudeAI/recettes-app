@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { getRecipeWithMeta } from '../services/dataService'
   import { deleteRecipe, updateMetadata, addHistoryEntry } from '../stores/recipes'
+  import { secureImageUrl } from '../services/recipeParser'
   import type { RecipeWithMeta, RecipeStatus } from '../types'
   import StarRating from './StarRating.svelte'
   import TagInput from './TagInput.svelte'
@@ -158,7 +159,7 @@
       <div class="recipe-main">
         {#if recipe.image}
           <div class="recipe-image">
-            <img src={recipe.image} alt={recipe.title} />
+            <img src={secureImageUrl(recipe.image)} alt={recipe.title} />
           </div>
         {/if}
 

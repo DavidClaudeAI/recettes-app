@@ -11,7 +11,9 @@
       "Bash(npm run build:*)",
       "WebFetch(domain:www.julieandrieu.com)",
       "Bash(git push:*)",
-      "Bash(npx pwa-assets-generator:*)"
+      "Bash(npx pwa-assets-generator:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

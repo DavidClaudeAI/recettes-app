@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createRecipe } from '../stores/recipes'
+  import ImageUpload from './ImageUpload.svelte'
   import type { Ingredient } from '../types'
 
   interface Props {
@@ -10,6 +11,7 @@
 
   let title = $state('')
   let source = $state('')
+  let image = $state<string | undefined>(undefined)
   let prepTime = $state<number | undefined>(undefined)
   let cookTime = $state<number | undefined>(undefined)
   let servings = $state(4)
@@ -70,6 +72,7 @@
       await createRecipe({
         title: title.trim(),
         source: source.trim() || undefined,
+        image: image || undefined,
         prepTime: prepTime ? Number(prepTime) : undefined,
         cookTime: cookTime ? Number(cookTime) : undefined,
         servings: Number(servings) || 4,
@@ -107,6 +110,11 @@
       <div class="form-group">
         <label for="source">Source (URL)</label>
         <input type="url" id="source" bind:value={source} placeholder="https://..." />
+      </div>
+
+      <div class="form-group">
+        <label>Photo de la recette</label>
+        <ImageUpload value={image} onchange={(v) => image = v} />
       </div>
 
       <div class="form-row">

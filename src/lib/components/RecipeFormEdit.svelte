@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { updateRecipe } from '../stores/recipes'
   import { getRecipe } from '../services/dataService'
+  import ImageUpload from './ImageUpload.svelte'
   import type { Ingredient, Recipe } from '../types'
 
   interface Props {
@@ -13,6 +14,7 @@
 
   let title = $state('')
   let source = $state('')
+  let image = $state<string | undefined>(undefined)
   let prepTime = $state<number | undefined>(undefined)
   let cookTime = $state<number | undefined>(undefined)
   let servings = $state(4)
@@ -29,6 +31,7 @@
       if (recipe) {
         title = recipe.title
         source = recipe.source || ''
+        image = recipe.image
         prepTime = recipe.prepTime
         cookTime = recipe.cookTime
         servings = recipe.servings
@@ -90,6 +93,7 @@
       await updateRecipe(recipeId, {
         title: title.trim(),
         source: source.trim() || undefined,
+        image: image || undefined,
         prepTime,
         cookTime,
         servings,
@@ -130,6 +134,11 @@
         <div class="form-group">
           <label for="source">Source (URL)</label>
           <input type="url" id="source" bind:value={source} placeholder="https://..." />
+        </div>
+
+        <div class="form-group">
+          <label>Photo de la recette</label>
+          <ImageUpload value={image} onchange={(v) => image = v} />
         </div>
 
         <div class="form-row">

@@ -321,13 +321,22 @@
     text-overflow: ellipsis;
   }
 
-  .btn-exit, .btn-ingredients {
+  .btn-exit {
     background: none;
     border: none;
     color: white;
     cursor: pointer;
     padding: 0.5rem;
     font-size: 0.9rem;
+  }
+
+  .btn-ingredients {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: 1.5rem;
   }
 
   .progress-bar {

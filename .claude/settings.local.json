@@ -10,7 +10,8 @@
       "Bash(cat:*)",
       "Bash(npm run build:*)",
       "WebFetch(domain:www.julieandrieu.com)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npx pwa-assets-generator:*)"
     ],
     "deny": [],
     "ask": []

@@ -125,8 +125,12 @@ export async function updateRecipe(id: string, updates: Partial<Recipe>): Promis
 
 // Update metadata
 export async function updateMetadata(id: string, updates: Partial<RecipeMetadata>): Promise<void> {
-  const existing = await dataService.getMetadata(id)
-  if (!existing) throw new Error('Metadata not found')
+  let existing = await dataService.getMetadata(id)
+
+  // Create default metadata if it doesn't exist
+  if (!existing) {
+    existing = await dataService.createDefaultMetadata(id)
+  }
 
   const updated: RecipeMetadata = {
     ...existing,

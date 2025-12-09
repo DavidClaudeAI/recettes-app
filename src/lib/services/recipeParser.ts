@@ -39,27 +39,27 @@ export function parseIngredientString(str: string): Ingredient {
   // Clean up the string
   str = str.trim().replace(/\s+/g, ' ')
 
-  // Common patterns for quantity + unit + ingredient
-  const patterns = [
-    // "2 cups flour" or "1/2 cup sugar"
-    /^([\d\/\.\,]+(?:\s*[\d\/]+)?)\s*(cups?|tasses?|c\.\s*à\s*s\.?|c\.\s*à\s*c\.?|cuillères?\s*à\s*(?:soupe|café)|tbsp?|tsp?|tablespoons?|teaspoons?|ml|cl|l|litres?|g|kg|grammes?|kilogrammes?|oz|ounces?|lb|lbs?|pounds?|pieces?|pièces?|tranches?|slices?|gousses?|cloves?)\s+(.+)$/i,
-    // "250g de farine" (French style)
-    /^([\d\/\.\,]+)\s*(g|kg|ml|cl|l)\s+(?:de\s+)?(.+)$/i,
-    // "2 oeufs" (no unit)
-    /^([\d\/\.\,]+)\s+(.+)$/,
-  ]
+  // Pattern 1: quantity + known unit + ingredient name
+  // "2 cups flour", "250 g de farine", "1/2 c. à soupe sucre"
+  const unitPattern = /^([\d\/\.\,]+(?:\s*[\d\/]+)?)\s*(cups?|tasses?|c\.\s*à\s*s\.?|c\.\s*à\s*c\.?|cuillères?\s*à\s*(?:soupe|café)|tbsp?|tsp?|tablespoons?|teaspoons?|ml|cl|l|litres?|g|kg|grammes?|kilogrammes?|oz|ounces?|lb|lbs?|pounds?|tranches?|slices?|gousses?|cloves?)\s+(?:de\s+)?(.+)$/i
 
-  for (const pattern of patterns) {
-    const match = str.match(pattern)
-    if (match) {
-      let quantity = parseQuantity(match[1])
-      let unit = match[2]?.toLowerCase() || ''
-      let name = match[3] || match[2] || str
+  const unitMatch = str.match(unitPattern)
+  if (unitMatch) {
+    return {
+      quantity: parseQuantity(unitMatch[1]),
+      unit: normalizeUnit(unitMatch[2]),
+      name: unitMatch[3].trim()
+    }
+  }
 
-      // Normalize units
-      unit = normalizeUnit(unit)
-
-      return { quantity, unit, name: name.trim() }
+  // Pattern 2: quantity + ingredient name (no unit, like "2 oeufs", "3 poivrons")
+  const noUnitPattern = /^([\d\/\.\,]+)\s+(.+)$/
+  const noUnitMatch = str.match(noUnitPattern)
+  if (noUnitMatch) {
+    return {
+      quantity: parseQuantity(noUnitMatch[1]),
+      unit: '',
+      name: noUnitMatch[2].trim()
     }
   }
 

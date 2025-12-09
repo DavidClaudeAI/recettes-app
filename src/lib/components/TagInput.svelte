@@ -65,14 +65,14 @@
     <ul class="suggestions">
       {#each suggestions as suggestion}
         <li>
-          <button type="button" onclick={() => addTag(suggestion)}>
+          <button type="button" onmousedown={(e) => { e.preventDefault(); addTag(suggestion); }}>
             {suggestion}
           </button>
         </li>
       {/each}
       {#if inputValue && !suggestions.includes(inputValue.toLowerCase())}
         <li class="new-tag">
-          <button type="button" onclick={() => addTag(inputValue)}>
+          <button type="button" onmousedown={(e) => { e.preventDefault(); addTag(inputValue); }}>
             + Créer "{inputValue}"
           </button>
         </li>

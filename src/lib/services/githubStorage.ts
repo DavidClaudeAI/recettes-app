@@ -77,7 +77,8 @@ async function getFile(config: GitHubConfig, path: string): Promise<GitHubFile |
   }
 
   const data = await response.json()
-  const content = atob(data.content.replace(/\n/g, ''))
+  // Decode base64 + UTF-8 properly
+  const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))))
 
   return {
     content,

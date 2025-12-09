@@ -177,20 +177,34 @@ async function saveData<T>(
   config: GitHubConfig,
   fileKey: keyof typeof FILES,
   data: T[],
-  message: string
+  message: string,
+  maxRetries = 3
 ): Promise<void> {
   const content = JSON.stringify(data, null, 2)
 
-  // Always get fresh SHA to avoid conflicts
-  const existingFile = await getFile(config, FILES[fileKey])
-  const sha = existingFile?.sha
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // Always get fresh SHA to avoid conflicts
+      const existingFile = await getFile(config, FILES[fileKey])
+      const sha = existingFile?.sha
 
-  await saveFile(config, FILES[fileKey], content, message, sha)
+      await saveFile(config, FILES[fileKey], content, message, sha)
 
-  // Update SHA cache
-  const newFile = await getFile(config, FILES[fileKey])
-  if (newFile) {
-    shaCache.set(fileKey, newFile.sha)
+      // Update SHA cache
+      const newFile = await getFile(config, FILES[fileKey])
+      if (newFile) {
+        shaCache.set(fileKey, newFile.sha)
+      }
+      return // Success
+    } catch (error) {
+      const isConflict = error instanceof Error && error.message.includes('Conflit')
+      if (isConflict && attempt < maxRetries - 1) {
+        // Wait with exponential backoff before retry
+        await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt)))
+        continue
+      }
+      throw error
+    }
   }
 }
 
@@ -299,17 +313,29 @@ export async function getMetadata(config: GitHubConfig, id: string): Promise<Rec
   return metadata.find(m => m.id === id)
 }
 
-export async function saveMetadata(config: GitHubConfig, meta: RecipeMetadata): Promise<void> {
-  const metadata = await getAllMetadata(config)
-  const index = metadata.findIndex(m => m.id === meta.id)
+export async function saveMetadata(config: GitHubConfig, meta: RecipeMetadata, maxRetries = 3): Promise<void> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const metadata = await getAllMetadata(config)
+      const index = metadata.findIndex(m => m.id === meta.id)
 
-  if (index >= 0) {
-    metadata[index] = meta
-  } else {
-    metadata.push(meta)
+      if (index >= 0) {
+        metadata[index] = meta
+      } else {
+        metadata.push(meta)
+      }
+
+      await saveData(config, 'metadata', metadata, `Update metadata ${meta.id}`, 1)
+      return
+    } catch (error) {
+      const isConflict = error instanceof Error && error.message.includes('Conflit')
+      if (isConflict && attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 150 * Math.pow(2, attempt)))
+        continue
+      }
+      throw error
+    }
   }
-
-  await saveData(config, 'metadata', metadata, `Update metadata ${meta.id}`)
 }
 
 export async function createDefaultMetadata(config: GitHubConfig, recipeId: string): Promise<RecipeMetadata> {
@@ -364,17 +390,29 @@ export async function getPlanningForWeek(config: GitHubConfig, weekStart: string
   return planning.filter(p => p.weekStart === weekStart)
 }
 
-export async function savePlanningEntry(config: GitHubConfig, entry: PlanningEntry): Promise<void> {
-  const planning = await getAllPlanning(config)
-  const index = planning.findIndex(p => p.id === entry.id)
+export async function savePlanningEntry(config: GitHubConfig, entry: PlanningEntry, maxRetries = 3): Promise<void> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const planning = await getAllPlanning(config)
+      const index = planning.findIndex(p => p.id === entry.id)
 
-  if (index >= 0) {
-    planning[index] = entry
-  } else {
-    planning.push(entry)
+      if (index >= 0) {
+        planning[index] = entry
+      } else {
+        planning.push(entry)
+      }
+
+      await saveData(config, 'planning', planning, `Update planning ${entry.id}`, 1)
+      return
+    } catch (error) {
+      const isConflict = error instanceof Error && error.message.includes('Conflit')
+      if (isConflict && attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 150 * Math.pow(2, attempt)))
+        continue
+      }
+      throw error
+    }
   }
-
-  await saveData(config, 'planning', planning, `Update planning ${entry.id}`)
 }
 
 export async function deletePlanningEntry(config: GitHubConfig, id: string): Promise<void> {
@@ -394,17 +432,29 @@ export async function getShoppingList(config: GitHubConfig, id: string): Promise
   return lists.find(l => l.id === id)
 }
 
-export async function saveShoppingList(config: GitHubConfig, list: ShoppingList): Promise<void> {
-  const lists = await getAllShoppingLists(config)
-  const index = lists.findIndex(l => l.id === list.id)
+export async function saveShoppingList(config: GitHubConfig, list: ShoppingList, maxRetries = 3): Promise<void> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const lists = await getAllShoppingLists(config)
+      const index = lists.findIndex(l => l.id === list.id)
 
-  if (index >= 0) {
-    lists[index] = list
-  } else {
-    lists.push(list)
+      if (index >= 0) {
+        lists[index] = list
+      } else {
+        lists.push(list)
+      }
+
+      await saveData(config, 'shoppingLists', lists, `Update shopping list: ${list.name}`, 1)
+      return
+    } catch (error) {
+      const isConflict = error instanceof Error && error.message.includes('Conflit')
+      if (isConflict && attempt < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 150 * Math.pow(2, attempt)))
+        continue
+      }
+      throw error
+    }
   }
-
-  await saveData(config, 'shoppingLists', lists, `Update shopping list: ${list.name}`)
 }
 
 export async function deleteShoppingList(config: GitHubConfig, id: string): Promise<void> {

@@ -13,7 +13,9 @@
     migrateToGitHub,
     clearLocalData,
     exportLocalData,
-    getStorageMode
+    getStorageMode,
+    getAllRecipes,
+    saveRecipe
   } from '../services/dataService'
 
   let token = $state('')
@@ -29,6 +31,9 @@
   let isConfigured = $state(false)
   let storageMode = $state<'local' | 'github'>('local')
   let localDataCount = $state(0)
+
+  let repairing = $state(false)
+  let repairResult = $state<{ success: boolean; fixed: number; error?: string } | null>(null)
 
   onMount(async () => {
     const config = getGitHubConfig()
@@ -136,6 +141,41 @@
   function createTokenUrl() {
     // Fine-grained tokens (limited to specific repos)
     return 'https://github.com/settings/personal-access-tokens/new'
+  }
+
+  async function repairIngredients() {
+    if (!confirm('Reparer les ingredients de toutes les recettes ? (corrige les unites manquantes)')) return
+
+    repairing = true
+    repairResult = null
+
+    try {
+      const recipes = await getAllRecipes()
+      let fixedCount = 0
+
+      for (const recipe of recipes) {
+        let modified = false
+
+        for (const ingredient of recipe.ingredients) {
+          // If unit equals name, it's the old bug - clear the unit
+          if (ingredient.unit && ingredient.unit === ingredient.name) {
+            ingredient.unit = ''
+            modified = true
+          }
+        }
+
+        if (modified) {
+          await saveRecipe(recipe)
+          fixedCount++
+        }
+      }
+
+      repairResult = { success: true, fixed: fixedCount }
+    } catch (e) {
+      repairResult = { success: false, fixed: 0, error: e instanceof Error ? e.message : 'Erreur inconnue' }
+    } finally {
+      repairing = false
+    }
   }
 </script>
 
@@ -260,6 +300,29 @@
 
       <button class="btn-primary" onclick={migrate} disabled={migrating}>
         {migrating ? 'Migration en cours...' : 'Migrer vers GitHub'}
+      </button>
+    </section>
+  {/if}
+
+  {#if isConfigured}
+    <section class="section">
+      <h2>Maintenance</h2>
+      <p class="section-desc">
+        Repare les recettes dont les ingredients ont ete mal importes (unite = nom).
+      </p>
+
+      {#if repairResult}
+        <div class="result" class:success={repairResult.success} class:error={!repairResult.success}>
+          {#if repairResult.success}
+            {repairResult.fixed} recette(s) reparee(s) !
+          {:else}
+            Erreur: {repairResult.error}
+          {/if}
+        </div>
+      {/if}
+
+      <button class="btn-secondary" onclick={repairIngredients} disabled={repairing}>
+        {repairing ? 'Reparation en cours...' : 'Reparer les ingredients'}
       </button>
     </section>
   {/if}

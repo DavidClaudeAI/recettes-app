@@ -87,7 +87,7 @@
   }
 </script>
 
-<div class="modal-overlay" onclick={onclose}>
+<div class="modal-overlay">
   <div class="modal" onclick={(e) => e.stopPropagation()}>
     <header class="modal-header">
       <h2>Nouvelle recette</h2>
@@ -201,9 +201,10 @@
     background: white;
     border-radius: 12px;
     width: 100%;
-    max-width: 600px;
+    max-width: 700px;
     max-height: 90vh;
     overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .modal-header {
@@ -284,11 +285,12 @@
     display: flex;
     gap: 0.5rem;
     align-items: flex-start;
+    flex-wrap: wrap;
   }
 
-  .input-qty { width: 70px; }
-  .input-unit { width: 80px; }
-  .input-name { flex: 1; }
+  .input-qty { width: 70px; flex-shrink: 0; }
+  .input-unit { width: 80px; flex-shrink: 0; }
+  .input-name { flex: 1; min-width: 150px; }
 
   .step-number {
     padding: 0.75rem 0;

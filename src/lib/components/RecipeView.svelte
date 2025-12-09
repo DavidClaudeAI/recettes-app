@@ -18,6 +18,7 @@
   let error = $state<string | null>(null)
   let showDeleteConfirm = $state(false)
   let adjustedServings = $state<number | null>(null)
+  let saving = $state(false)
 
   const statusOptions: { value: RecipeStatus; label: string; color: string }[] = [
     { value: 'to-test', label: 'À tester', color: '#f59e0b' },
@@ -61,23 +62,59 @@
   async function handleStatusChange(e: Event) {
     const select = e.target as HTMLSelectElement
     const newStatus = select.value as RecipeStatus
-    if (recipe) {
-      await updateMetadata(recipe.id, { status: newStatus })
-      recipe.metadata.status = newStatus
+    if (recipe && !saving) {
+      saving = true
+      try {
+        await updateMetadata(recipe.id, { status: newStatus })
+        // Create new object to trigger Svelte 5 reactivity
+        recipe = {
+          ...recipe,
+          metadata: { ...recipe.metadata, status: newStatus }
+        }
+      } catch (e) {
+        console.error('Error saving status:', e)
+        alert('Erreur lors de la sauvegarde du statut')
+        // Revert select to original value
+        select.value = recipe.metadata.status
+      } finally {
+        saving = false
+      }
     }
   }
 
   async function handleRatingChange(rating: number) {
-    if (recipe) {
-      await updateMetadata(recipe.id, { rating })
-      recipe.metadata.rating = rating
+    if (recipe && !saving) {
+      saving = true
+      try {
+        await updateMetadata(recipe.id, { rating })
+        recipe = {
+          ...recipe,
+          metadata: { ...recipe.metadata, rating }
+        }
+      } catch (e) {
+        console.error('Error saving rating:', e)
+        alert('Erreur lors de la sauvegarde de la note')
+      } finally {
+        saving = false
+      }
     }
   }
 
   async function handleTagsChange(tags: string[]) {
-    if (recipe) {
-      await updateMetadata(recipe.id, { tags })
-      recipe.metadata.tags = tags
+    if (recipe && !saving) {
+      saving = true
+      try {
+        await updateMetadata(recipe.id, { tags })
+        recipe = {
+          ...recipe,
+          metadata: { ...recipe.metadata, tags }
+        }
+      } catch (e) {
+        console.error('Error saving tags:', e)
+        alert('Erreur lors de la sauvegarde des tags')
+      } finally {
+        saving = false
+      }
     }
   }
 
@@ -203,8 +240,8 @@
 
       <aside class="recipe-sidebar">
         <div class="sidebar-section">
-          <label class="sidebar-label">Statut</label>
-          <select value={recipe.metadata.status} onchange={handleStatusChange}>
+          <label class="sidebar-label">Statut {saving ? '...' : ''}</label>
+          <select value={recipe.metadata.status} onchange={handleStatusChange} disabled={saving}>
             {#each statusOptions as option}
               <option value={option.value}>{option.label}</option>
             {/each}

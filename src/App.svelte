@@ -13,6 +13,7 @@
   // Simple hash-based routing
   let currentRoute = $state(window.location.hash.slice(1) || '/')
   let editingRecipeId = $state<string | null>(null)
+  let updateAvailable = $state(false)
 
   // Parse routes
   const recipeMatch = $derived(currentRoute.match(/^\/recipes\/([a-f0-9-]+)$/))
@@ -29,8 +30,34 @@
     }
 
     window.addEventListener('hashchange', handleHashChange)
+
+    // Detect service worker updates
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                updateAvailable = true
+              }
+            })
+          }
+        })
+      })
+
+      // Listen for controller change and reload
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload()
+      })
+    }
+
     return () => window.removeEventListener('hashchange', handleHashChange)
   })
+
+  function reloadApp() {
+    window.location.reload()
+  }
 
   function handleEdit() {
     if (recipeId) {
@@ -43,6 +70,13 @@
     loadRecipes()
   }
 </script>
+
+{#if updateAvailable}
+  <div class="update-banner">
+    <span>Une nouvelle version est disponible</span>
+    <button onclick={reloadApp}>Mettre a jour</button>
+  </div>
+{/if}
 
 {#if cookingRecipeId}
   <CookingMode recipeId={cookingRecipeId} />
@@ -118,5 +152,35 @@
 
   .placeholder a {
     color: #10b981;
+  }
+
+  .update-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #10b981;
+    color: white;
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    z-index: 9999;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .update-banner button {
+    background: white;
+    color: #10b981;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .update-banner button:hover {
+    background: #f0fdf4;
   }
 </style>

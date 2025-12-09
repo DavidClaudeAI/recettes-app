@@ -201,10 +201,20 @@
   }
 
   // Items management
-  async function toggleItem(item: ShoppingItem) {
+  async function toggleItem(itemId: string) {
     if (!currentList) return
-    item.checked = !item.checked
-    currentList.updatedAt = new Date().toISOString()
+
+    // Create new items array with toggled item to trigger reactivity
+    const newItems = currentList.items.map(i =>
+      i.id === itemId ? { ...i, checked: !i.checked } : i
+    )
+
+    currentList = {
+      ...currentList,
+      items: newItems,
+      updatedAt: new Date().toISOString()
+    }
+
     await saveShoppingList(currentList)
   }
 
@@ -218,23 +228,33 @@
       category: guessCategory(newItemName)
     }
 
-    currentList.items = [...currentList.items, newItem]
-    currentList.updatedAt = new Date().toISOString()
+    currentList = {
+      ...currentList,
+      items: [...currentList.items, newItem],
+      updatedAt: new Date().toISOString()
+    }
     await saveShoppingList(currentList)
     newItemName = ''
   }
 
   async function removeItem(itemId: string) {
     if (!currentList) return
-    currentList.items = currentList.items.filter(i => i.id !== itemId)
-    currentList.updatedAt = new Date().toISOString()
+    currentList = {
+      ...currentList,
+      items: currentList.items.filter(i => i.id !== itemId),
+      updatedAt: new Date().toISOString()
+    }
     await saveShoppingList(currentList)
   }
 
   async function clearChecked() {
     if (!currentList) return
-    currentList.items = currentList.items.filter(i => !i.checked)
-    currentList.updatedAt = new Date().toISOString()
+    if (!confirm(`Supprimer les ${checkedCount} articles cochés ?`)) return
+    currentList = {
+      ...currentList,
+      items: currentList.items.filter(i => !i.checked),
+      updatedAt: new Date().toISOString()
+    }
     await saveShoppingList(currentList)
   }
 
@@ -296,15 +316,22 @@
     )
   )
 
-  const groupedItems = $derived(() => {
+  // Group unchecked items by category
+  const groupedUncheckedItems = $derived(() => {
     if (!currentList) return new Map<string, ShoppingItem[]>()
     const groups = new Map<string, ShoppingItem[]>()
-    for (const item of currentList.items) {
+    for (const item of currentList.items.filter(i => !i.checked)) {
       const cat = item.category || 'Autres'
       if (!groups.has(cat)) groups.set(cat, [])
       groups.get(cat)!.push(item)
     }
     return groups
+  })
+
+  // Checked items (in cart / already have)
+  const checkedItems = $derived(() => {
+    if (!currentList) return []
+    return currentList.items.filter(i => i.checked)
   })
 
   const checkedCount = $derived(currentList?.items.filter(i => i.checked).length || 0)
@@ -421,17 +448,18 @@
       {/if}
 
       <div class="items-container">
-        {#each [...groupedItems().entries()] as [category, items]}
+        <!-- Unchecked items grouped by category -->
+        {#each [...groupedUncheckedItems().entries()] as [category, items]}
           <div class="category-group">
             <h3 class="category-title">{category}</h3>
             <ul class="items-list">
               {#each items as item (item.id)}
-                <li class="item" class:checked={item.checked}>
+                <li class="item">
                   <label class="item-label">
                     <input
                       type="checkbox"
                       checked={item.checked}
-                      onchange={() => toggleItem(item)}
+                      onchange={() => toggleItem(item.id)}
                     />
                     <span class="item-info">
                       <span class="item-name">
@@ -454,8 +482,42 @@
             </ul>
           </div>
         {:else}
-          <p class="empty-items">La liste est vide. Ajoutez des articles ci-dessus.</p>
+          {#if checkedItems().length === 0}
+            <p class="empty-items">La liste est vide. Ajoutez des articles ci-dessus.</p>
+          {/if}
         {/each}
+
+        <!-- Checked items section -->
+        {#if checkedItems().length > 0}
+          <div class="category-group checked-section">
+            <h3 class="category-title checked-title">
+              Dans le panier ({checkedItems().length})
+            </h3>
+            <ul class="items-list">
+              {#each checkedItems() as item (item.id)}
+                <li class="item checked">
+                  <label class="item-label">
+                    <input
+                      type="checkbox"
+                      checked={item.checked}
+                      onchange={() => toggleItem(item.id)}
+                    />
+                    <span class="item-info">
+                      <span class="item-name">
+                        {#if item.quantity}
+                          <strong>{item.quantity}</strong>
+                          {#if item.unit}{item.unit}{/if}
+                        {/if}
+                        {item.name}
+                      </span>
+                    </span>
+                  </label>
+                  <button class="btn-remove" onclick={() => removeItem(item.id)}>&times;</button>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
       </div>
     {/if}
   </div>
@@ -912,6 +974,16 @@
 
   .btn-remove:hover {
     color: #dc2626;
+  }
+
+  .checked-section {
+    opacity: 0.7;
+    border: 1px dashed #ccc;
+  }
+
+  .checked-title {
+    background: #f0f0f0;
+    color: #888;
   }
 
   .empty-items {

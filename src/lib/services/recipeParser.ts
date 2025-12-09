@@ -1,5 +1,13 @@
 import type { Ingredient } from '../types'
 
+// Decode HTML entities like &#39; &amp; etc.
+function decodeHtmlEntities(text: string): string {
+  if (!text) return text
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = text
+  return textarea.value
+}
+
 export interface ParsedRecipe {
   title: string
   source: string
@@ -36,8 +44,8 @@ function parseServings(recipeYield: string | number | string[] | undefined): num
 
 // Parse ingredient string into structured format
 export function parseIngredientString(str: string): Ingredient {
-  // Clean up the string
-  str = str.trim().replace(/\s+/g, ' ')
+  // Decode HTML entities and clean up the string
+  str = decodeHtmlEntities(str).trim().replace(/\s+/g, ' ')
 
   // Pattern 1: quantity + known unit + ingredient name
   // "2 cups flour", "250 g de farine", "1/2 c. à soupe sucre"
@@ -143,15 +151,15 @@ function parseInstructions(instructions: any): string[] {
   // Array of items
   if (Array.isArray(instructions)) {
     return instructions.flatMap(item => {
-      if (typeof item === 'string') return [item]
+      if (typeof item === 'string') return [decodeHtmlEntities(item)]
       if (isType(item, 'HowToStep')) {
-        return [item.text || item.description || item.name || '']
+        return [decodeHtmlEntities(item.text || item.description || item.name || '')]
       }
       if (isType(item, 'HowToSection')) {
         return parseInstructions(item.itemListElement)
       }
       // Object without @type but with text
-      if (item.text) return [item.text]
+      if (item.text) return [decodeHtmlEntities(item.text)]
       return []
     }).filter(s => s.trim())
   }
@@ -160,13 +168,13 @@ function parseInstructions(instructions: any): string[] {
   if (typeof instructions === 'string') {
     return instructions
       .split(/\n|(?=\d+\.\s)/)
-      .map(s => s.replace(/^\d+\.\s*/, '').trim())
+      .map(s => decodeHtmlEntities(s.replace(/^\d+\.\s*/, '').trim()))
       .filter(s => s)
   }
 
   // Single object
   if (typeof instructions === 'object' && instructions.text) {
-    return [instructions.text]
+    return [decodeHtmlEntities(instructions.text)]
   }
 
   return []
@@ -245,7 +253,7 @@ export function parseRecipeFromHtml(html: string, sourceUrl: string): ParsedReci
   const steps = parseInstructions(recipeSchema.recipeInstructions || recipeSchema.recipeSteps)
 
   return {
-    title: recipeSchema.name || 'Recette sans titre',
+    title: decodeHtmlEntities(recipeSchema.name) || 'Recette sans titre',
     source: sourceUrl,
     prepTime: parseDuration(recipeSchema.prepTime),
     cookTime: parseDuration(recipeSchema.cookTime),

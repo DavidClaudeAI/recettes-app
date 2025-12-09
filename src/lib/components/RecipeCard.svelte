@@ -34,9 +34,9 @@
 
 <article class="recipe-card">
   {#if recipe.image}
-    <div class="card-image">
+    <a href="#/recipes/{recipe.id}" class="card-image">
       <img src={recipe.image} alt={recipe.title} />
-    </div>
+    </a>
   {/if}
   <div class="card-body">
     <div class="card-header">
@@ -92,15 +92,22 @@
   }
 
   .card-image {
+    display: block;
     width: 100%;
     height: 140px;
     overflow: hidden;
+    cursor: pointer;
   }
 
   .card-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.2s;
+  }
+
+  .card-image:hover img {
+    transform: scale(1.05);
   }
 
   .card-body {

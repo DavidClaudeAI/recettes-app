@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm ls:*)",
+      "Bash(node -e:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "WebFetch(domain:www.julieandrieu.com)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

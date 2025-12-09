@@ -4,6 +4,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Pour GitHub Pages
+  base: process.env.NODE_ENV === 'production' ? '/recettes-app/' : '/',
   plugins: [
     svelte(),
     VitePWA({
@@ -17,8 +19,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait-primary',
-        scope: '/',
-        start_url: '/',
+        scope: './',
+        start_url: './',
         icons: [
           {
             src: 'pwa-192x192.png',

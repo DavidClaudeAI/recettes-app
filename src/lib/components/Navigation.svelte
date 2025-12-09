@@ -8,7 +8,8 @@
   const navItems = [
     { path: '/', label: 'Recettes', icon: '🍳' },
     { path: '/planning', label: 'Planning', icon: '📅' },
-    { path: '/shopping', label: 'Courses', icon: '🛒' }
+    { path: '/shopping', label: 'Courses', icon: '🛒' },
+    { path: '/settings', label: 'Parametres', icon: '⚙️' }
   ]
 
   function isActive(path: string): boolean {

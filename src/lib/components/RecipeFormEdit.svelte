@@ -1,12 +1,15 @@
 <script lang="ts">
-  import { createRecipe } from '../stores/recipes'
-  import type { Ingredient } from '../types'
+  import { onMount } from 'svelte'
+  import { updateRecipe } from '../stores/recipes'
+  import { getRecipe } from '../services/storage'
+  import type { Ingredient, Recipe } from '../types'
 
   interface Props {
+    recipeId: string
     onclose: () => void
   }
 
-  let { onclose }: Props = $props()
+  let { recipeId, onclose }: Props = $props()
 
   let title = $state('')
   let source = $state('')
@@ -14,10 +17,34 @@
   let cookTime = $state<number | undefined>(undefined)
   let servings = $state(4)
   let notes = $state('')
-  let ingredients = $state<Ingredient[]>([{ name: '', quantity: 1, unit: '' }])
-  let steps = $state<string[]>([''])
+  let ingredients = $state<Ingredient[]>([])
+  let steps = $state<string[]>([])
+  let loading = $state(true)
   let saving = $state(false)
   let error = $state<string | null>(null)
+
+  onMount(async () => {
+    try {
+      const recipe = await getRecipe(recipeId)
+      if (recipe) {
+        title = recipe.title
+        source = recipe.source || ''
+        prepTime = recipe.prepTime
+        cookTime = recipe.cookTime
+        servings = recipe.servings
+        notes = recipe.notes || ''
+        ingredients = [...recipe.ingredients]
+        steps = [...recipe.steps]
+      } else {
+        error = 'Recette non trouvée'
+      }
+    } catch (e) {
+      error = 'Erreur lors du chargement'
+      console.error(e)
+    } finally {
+      loading = false
+    }
+  })
 
   function addIngredient() {
     ingredients = [...ingredients, { name: '', quantity: 1, unit: '' }]
@@ -60,128 +87,125 @@
     saving = true
 
     try {
-      // Ensure ingredients have proper numeric quantities
-      const cleanIngredients = validIngredients.map(i => ({
-        name: i.name.trim(),
-        quantity: Number(i.quantity) || 1,
-        unit: i.unit?.trim() || ''
-      }))
-
-      await createRecipe({
+      await updateRecipe(recipeId, {
         title: title.trim(),
         source: source.trim() || undefined,
-        prepTime: prepTime ? Number(prepTime) : undefined,
-        cookTime: cookTime ? Number(cookTime) : undefined,
-        servings: Number(servings) || 4,
-        ingredients: cleanIngredients,
-        steps: validSteps.map(s => s.trim()),
+        prepTime,
+        cookTime,
+        servings,
+        ingredients: validIngredients,
+        steps: validSteps,
         notes: notes.trim() || undefined
       })
       onclose()
     } catch (e) {
-      console.error('Erreur sauvegarde:', e)
-      error = e instanceof Error ? e.message : 'Erreur lors de la sauvegarde'
+      error = 'Erreur lors de la sauvegarde'
+      console.error(e)
     } finally {
       saving = false
     }
   }
 </script>
 
-<div class="modal-overlay" onclick={onclose}>
+<div class="modal-overlay" role="dialog" aria-modal="true" onclick={onclose}>
   <div class="modal" onclick={(e) => e.stopPropagation()}>
     <header class="modal-header">
-      <h2>Nouvelle recette</h2>
+      <h2>Modifier la recette</h2>
       <button class="btn-close" onclick={onclose}>×</button>
     </header>
 
-    <form onsubmit={handleSubmit}>
-      {#if error}
-        <div class="form-error">{error}</div>
-      {/if}
+    {#if loading}
+      <div class="loading">Chargement...</div>
+    {:else}
+      <form onsubmit={handleSubmit}>
+        {#if error}
+          <div class="form-error">{error}</div>
+        {/if}
 
-      <div class="form-group">
-        <label for="title">Titre *</label>
-        <input type="text" id="title" bind:value={title} placeholder="Ex: Poulet rôti aux herbes" />
-      </div>
-
-      <div class="form-group">
-        <label for="source">Source (URL)</label>
-        <input type="url" id="source" bind:value={source} placeholder="https://..." />
-      </div>
-
-      <div class="form-row">
         <div class="form-group">
-          <label for="prepTime">Préparation (min)</label>
-          <input type="number" id="prepTime" bind:value={prepTime} min="0" />
+          <label for="title">Titre *</label>
+          <input type="text" id="title" bind:value={title} placeholder="Ex: Poulet rôti aux herbes" />
         </div>
-        <div class="form-group">
-          <label for="cookTime">Cuisson (min)</label>
-          <input type="number" id="cookTime" bind:value={cookTime} min="0" />
-        </div>
-        <div class="form-group">
-          <label for="servings">Portions</label>
-          <input type="number" id="servings" bind:value={servings} min="1" />
-        </div>
-      </div>
 
-      <div class="form-group">
-        <label>Ingrédients *</label>
-        {#each ingredients as ingredient, i}
-          <div class="ingredient-row">
-            <input
-              type="number"
-              bind:value={ingredient.quantity}
-              min="0"
-              step="0.1"
-              placeholder="Qté"
-              class="input-qty"
-            />
-            <input
-              type="text"
-              bind:value={ingredient.unit}
-              placeholder="Unité"
-              class="input-unit"
-            />
-            <input
-              type="text"
-              bind:value={ingredient.name}
-              placeholder="Ingrédient"
-              class="input-name"
-            />
-            <button type="button" class="btn-remove" onclick={() => removeIngredient(i)}>×</button>
+        <div class="form-group">
+          <label for="source">Source (URL)</label>
+          <input type="url" id="source" bind:value={source} placeholder="https://..." />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="prepTime">Préparation (min)</label>
+            <input type="number" id="prepTime" bind:value={prepTime} min="0" />
           </div>
-        {/each}
-        <button type="button" class="btn-add" onclick={addIngredient}>+ Ajouter un ingrédient</button>
-      </div>
-
-      <div class="form-group">
-        <label>Étapes *</label>
-        {#each steps as step, i}
-          <div class="step-row">
-            <span class="step-number">{i + 1}.</span>
-            <textarea
-              bind:value={steps[i]}
-              placeholder="Décrivez cette étape..."
-              rows="2"
-            ></textarea>
-            <button type="button" class="btn-remove" onclick={() => removeStep(i)}>×</button>
+          <div class="form-group">
+            <label for="cookTime">Cuisson (min)</label>
+            <input type="number" id="cookTime" bind:value={cookTime} min="0" />
           </div>
-        {/each}
-        <button type="button" class="btn-add" onclick={addStep}>+ Ajouter une étape</button>
-      </div>
+          <div class="form-group">
+            <label for="servings">Portions</label>
+            <input type="number" id="servings" bind:value={servings} min="1" />
+          </div>
+        </div>
 
-      <div class="form-group">
-        <label for="notes">Notes personnelles</label>
-        <textarea id="notes" bind:value={notes} placeholder="Vos notes, astuces, variantes..." rows="3"></textarea>
-      </div>
+        <div class="form-group">
+          <label>Ingrédients *</label>
+          {#each ingredients as ingredient, i}
+            <div class="ingredient-row">
+              <input
+                type="number"
+                bind:value={ingredient.quantity}
+                min="0"
+                step="0.1"
+                placeholder="Qté"
+                class="input-qty"
+              />
+              <input
+                type="text"
+                bind:value={ingredient.unit}
+                placeholder="Unité"
+                class="input-unit"
+              />
+              <input
+                type="text"
+                bind:value={ingredient.name}
+                placeholder="Ingrédient"
+                class="input-name"
+              />
+              <button type="button" class="btn-remove" onclick={() => removeIngredient(i)}>×</button>
+            </div>
+          {/each}
+          <button type="button" class="btn-add" onclick={addIngredient}>+ Ajouter un ingrédient</button>
+        </div>
 
-      <div class="form-actions">
-        <button type="button" class="btn-cancel" onclick={onclose}>Annuler</button>
-        <button type="submit" class="btn-submit" disabled={saving}>
-          {saving ? 'Enregistrement...' : 'Enregistrer'}
-        </button>
-      </div>
-    </form>
+        <div class="form-group">
+          <label>Étapes *</label>
+          {#each steps as step, i}
+            <div class="step-row">
+              <span class="step-number">{i + 1}.</span>
+              <textarea
+                bind:value={steps[i]}
+                placeholder="Décrivez cette étape..."
+                rows="2"
+              ></textarea>
+              <button type="button" class="btn-remove" onclick={() => removeStep(i)}>×</button>
+            </div>
+          {/each}
+          <button type="button" class="btn-add" onclick={addStep}>+ Ajouter une étape</button>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes personnelles</label>
+          <textarea id="notes" bind:value={notes} placeholder="Vos notes, astuces, variantes..." rows="3"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" onclick={onclose}>Annuler</button>
+          <button type="submit" class="btn-submit" disabled={saving}>
+            {saving ? 'Enregistrement...' : 'Enregistrer'}
+          </button>
+        </div>
+      </form>
+    {/if}
   </div>
 </div>
 
@@ -231,6 +255,12 @@
     color: #666;
     padding: 0.25rem;
     line-height: 1;
+  }
+
+  .loading {
+    padding: 3rem;
+    text-align: center;
+    color: #666;
   }
 
   form {

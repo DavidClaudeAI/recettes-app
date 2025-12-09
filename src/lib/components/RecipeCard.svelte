@@ -33,43 +33,50 @@
 </script>
 
 <article class="recipe-card">
-  <div class="card-header">
-    <span
-      class="status-badge"
-      style="background-color: {statusColors[recipe.metadata.status]}"
-    >
-      {statusLabels[recipe.metadata.status]}
-    </span>
-    {#if recipe.metadata.rating}
-      <span class="rating">
-        {'★'.repeat(recipe.metadata.rating)}{'☆'.repeat(5 - recipe.metadata.rating)}
-      </span>
-    {/if}
-  </div>
-
-  <h3 class="card-title">{recipe.title}</h3>
-
-  <div class="card-meta">
-    {#if totalTime > 0}
-      <span class="meta-item">⏱️ {formatTime(totalTime)}</span>
-    {/if}
-    <span class="meta-item">👥 {recipe.servings} portions</span>
-    <span class="meta-item">🥘 {recipe.ingredients.length} ingrédients</span>
-  </div>
-
-  {#if recipe.metadata.tags.length > 0}
-    <div class="card-tags">
-      {#each recipe.metadata.tags.slice(0, 3) as tag}
-        <span class="tag">{tag}</span>
-      {/each}
-      {#if recipe.metadata.tags.length > 3}
-        <span class="tag more">+{recipe.metadata.tags.length - 3}</span>
-      {/if}
+  {#if recipe.image}
+    <div class="card-image">
+      <img src={recipe.image} alt={recipe.title} />
     </div>
   {/if}
+  <div class="card-body">
+    <div class="card-header">
+      <span
+        class="status-badge"
+        style="background-color: {statusColors[recipe.metadata.status]}"
+      >
+        {statusLabels[recipe.metadata.status]}
+      </span>
+      {#if recipe.metadata.rating}
+        <span class="rating">
+          {'★'.repeat(recipe.metadata.rating)}{'☆'.repeat(5 - recipe.metadata.rating)}
+        </span>
+      {/if}
+    </div>
 
-  <div class="card-actions">
-    <a href="#/recipes/{recipe.id}" class="btn-view">Voir</a>
+    <h3 class="card-title">{recipe.title}</h3>
+
+    <div class="card-meta">
+      {#if totalTime > 0}
+        <span class="meta-item">⏱️ {formatTime(totalTime)}</span>
+      {/if}
+      <span class="meta-item">👥 {recipe.servings} portions</span>
+      <span class="meta-item">🥘 {recipe.ingredients.length} ingrédients</span>
+    </div>
+
+    {#if recipe.metadata.tags.length > 0}
+      <div class="card-tags">
+        {#each recipe.metadata.tags.slice(0, 3) as tag}
+          <span class="tag">{tag}</span>
+        {/each}
+        {#if recipe.metadata.tags.length > 3}
+          <span class="tag more">+{recipe.metadata.tags.length - 3}</span>
+        {/if}
+      </div>
+    {/if}
+
+    <div class="card-actions">
+      <a href="#/recipes/{recipe.id}" class="btn-view">Voir</a>
+    </div>
   </div>
 </article>
 
@@ -77,12 +84,35 @@
   .recipe-card {
     background: white;
     border-radius: 12px;
-    padding: 1rem;
+    overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
     transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card-image {
+    width: 100%;
+    height: 140px;
+    overflow: hidden;
+  }
+
+  .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+  }
+
+  .card-image + .card-body {
+    padding-top: 0.75rem;
   }
 
   .recipe-card:hover {

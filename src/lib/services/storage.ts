@@ -41,13 +41,17 @@ export interface ShoppingItem {
   unit?: string
   checked: boolean
   category?: string
-  fromRecipes?: string[] // recipe IDs
+  fromRecipes?: string[] // recipe titles
 }
+
+export type ShoppingListStatus = 'active' | 'completed' | 'archived'
 
 export interface ShoppingList {
   id: string
   name: string
   createdAt: string
+  updatedAt?: string
+  status: ShoppingListStatus
   items: ShoppingItem[]
 }
 
@@ -99,7 +103,9 @@ export async function getRecipe(id: string): Promise<Recipe | undefined> {
 
 export async function saveRecipe(recipe: Recipe): Promise<void> {
   const db = await getDB()
-  await db.put('recipes', recipe)
+  // Deep clone to remove Svelte 5 Proxy (cannot be stored in IndexedDB)
+  const plainRecipe = JSON.parse(JSON.stringify(recipe))
+  await db.put('recipes', plainRecipe)
 }
 
 export async function deleteRecipe(id: string): Promise<void> {
@@ -122,7 +128,9 @@ export async function getAllMetadata(): Promise<RecipeMetadata[]> {
 
 export async function saveMetadata(metadata: RecipeMetadata): Promise<void> {
   const db = await getDB()
-  await db.put('metadata', metadata)
+  // Deep clone to remove Svelte 5 Proxy (cannot be stored in IndexedDB)
+  const plainMetadata = JSON.parse(JSON.stringify(metadata))
+  await db.put('metadata', plainMetadata)
 }
 
 export async function createDefaultMetadata(recipeId: string): Promise<RecipeMetadata> {
@@ -176,7 +184,9 @@ export async function getPlanningForWeek(weekStart: string): Promise<PlanningEnt
 
 export async function savePlanningEntry(entry: PlanningEntry): Promise<void> {
   const db = await getDB()
-  await db.put('planning', entry)
+  // Deep clone to remove Svelte 5 Proxy (cannot be stored in IndexedDB)
+  const plainEntry = JSON.parse(JSON.stringify(entry))
+  await db.put('planning', plainEntry)
 }
 
 export async function deletePlanningEntry(id: string): Promise<void> {
@@ -198,7 +208,9 @@ export async function getShoppingList(id: string): Promise<ShoppingList | undefi
 
 export async function saveShoppingList(list: ShoppingList): Promise<void> {
   const db = await getDB()
-  await db.put('shoppingLists', list)
+  // Deep clone to remove Svelte 5 Proxy (cannot be stored in IndexedDB)
+  const plainList = JSON.parse(JSON.stringify(list))
+  await db.put('shoppingLists', plainList)
 }
 
 export async function deleteShoppingList(id: string): Promise<void> {

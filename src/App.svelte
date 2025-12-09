@@ -2,47 +2,78 @@
   import { onMount } from 'svelte'
   import { loadRecipes } from './lib/stores/recipes'
   import RecipeList from './lib/components/RecipeList.svelte'
+  import RecipeView from './lib/components/RecipeView.svelte'
+  import RecipeFormEdit from './lib/components/RecipeFormEdit.svelte'
+  import CookingMode from './lib/components/CookingMode.svelte'
+  import WeekPlanner from './lib/components/WeekPlanner.svelte'
+  import ShoppingList from './lib/components/ShoppingList.svelte'
+  import Settings from './lib/components/Settings.svelte'
   import Navigation from './lib/components/Navigation.svelte'
 
   // Simple hash-based routing
   let currentRoute = $state(window.location.hash.slice(1) || '/')
+  let editingRecipeId = $state<string | null>(null)
+
+  // Parse routes
+  const recipeMatch = $derived(currentRoute.match(/^\/recipes\/([a-f0-9-]+)$/))
+  const cookingMatch = $derived(currentRoute.match(/^\/cooking\/([a-f0-9-]+)$/))
+  const recipeId = $derived(recipeMatch ? recipeMatch[1] : null)
+  const cookingRecipeId = $derived(cookingMatch ? cookingMatch[1] : null)
 
   onMount(() => {
     loadRecipes()
 
     const handleHashChange = () => {
       currentRoute = window.location.hash.slice(1) || '/'
+      editingRecipeId = null
     }
 
     window.addEventListener('hashchange', handleHashChange)
     return () => window.removeEventListener('hashchange', handleHashChange)
   })
+
+  function handleEdit() {
+    if (recipeId) {
+      editingRecipeId = recipeId
+    }
+  }
+
+  function closeEdit() {
+    editingRecipeId = null
+    loadRecipes()
+  }
 </script>
 
-<div class="app">
-  <Navigation {currentRoute} />
+{#if cookingRecipeId}
+  <CookingMode recipeId={cookingRecipeId} />
+{:else}
+  <div class="app">
+    <Navigation {currentRoute} />
 
-  <main class="main-content">
-    {#if currentRoute === '/' || currentRoute.startsWith('/recipes')}
-      <RecipeList />
-    {:else if currentRoute === '/planning'}
-      <div class="placeholder">
-        <h2>Planning hebdomadaire</h2>
-        <p>Bientôt disponible...</p>
-      </div>
-    {:else if currentRoute === '/shopping'}
-      <div class="placeholder">
-        <h2>Liste de courses</h2>
-        <p>Bientôt disponible...</p>
-      </div>
-    {:else}
-      <div class="placeholder">
-        <h2>Page non trouvée</h2>
-        <p><a href="#/">Retour à l'accueil</a></p>
-      </div>
-    {/if}
-  </main>
-</div>
+    <main class="main-content">
+      {#if recipeId}
+        <RecipeView {recipeId} onEdit={handleEdit} />
+      {:else if currentRoute === '/' || currentRoute === '/recipes'}
+        <RecipeList />
+      {:else if currentRoute === '/planning'}
+        <WeekPlanner />
+      {:else if currentRoute === '/shopping'}
+        <ShoppingList />
+      {:else if currentRoute === '/settings'}
+        <Settings />
+      {:else}
+        <div class="placeholder">
+          <h2>Page non trouvée</h2>
+          <p><a href="#/">Retour à l'accueil</a></p>
+        </div>
+      {/if}
+    </main>
+  </div>
+
+  {#if editingRecipeId}
+    <RecipeFormEdit recipeId={editingRecipeId} onclose={closeEdit} />
+  {/if}
+{/if}
 
 <style>
   :global(*) {

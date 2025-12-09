@@ -14,6 +14,7 @@ export interface Recipe {
   id: string
   title: string
   source?: string // URL d'origine
+  image?: string // base64 data URL ou URL externe
   prepTime?: number // minutes
   cookTime?: number // minutes
   servings: number
@@ -37,3 +38,14 @@ export interface RecipeWithMeta extends Recipe {
 }
 
 export type RecipeStatus = RecipeMetadata['status']
+
+// Planning hebdomadaire
+export type MealSlot = 'lunch' | 'dinner'
+
+export interface PlanningEntry {
+  id: string
+  weekStart: string // ISO date (lundi de la semaine)
+  day: number // 0-6 (lundi-dimanche)
+  slot: MealSlot
+  recipeId: string
+}

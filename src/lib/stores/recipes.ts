@@ -1,7 +1,7 @@
 import { writable, derived } from 'svelte/store'
 import { v4 as uuidv4 } from 'uuid'
 import type { Recipe, RecipeMetadata, RecipeWithMeta, RecipeStatus } from '../types'
-import * as storage from '../services/storage'
+import * as dataService from '../services/dataService'
 
 // Main store for recipes with metadata
 const recipesStore = writable<RecipeWithMeta[]>([])
@@ -67,7 +67,7 @@ export async function loadRecipes() {
   errorStore.set(null)
 
   try {
-    const recipes = await storage.getAllRecipesWithMeta()
+    const recipes = await dataService.getAllRecipesWithMeta()
     recipesStore.set(recipes)
   } catch (e) {
     errorStore.set('Erreur lors du chargement des recettes')
@@ -96,8 +96,8 @@ export async function createRecipe(recipeData: Omit<Recipe, 'id' | 'createdAt' |
     history: []
   }
 
-  await storage.saveRecipe(recipe)
-  await storage.saveMetadata(metadata)
+  await dataService.saveRecipe(recipe)
+  await dataService.saveMetadata(metadata)
 
   recipesStore.update(recipes => [...recipes, { ...recipe, metadata }])
 
@@ -106,7 +106,7 @@ export async function createRecipe(recipeData: Omit<Recipe, 'id' | 'createdAt' |
 
 // Update a recipe
 export async function updateRecipe(id: string, updates: Partial<Recipe>): Promise<void> {
-  const existing = await storage.getRecipe(id)
+  const existing = await dataService.getRecipe(id)
   if (!existing) throw new Error('Recipe not found')
 
   const updated: Recipe = {
@@ -116,7 +116,7 @@ export async function updateRecipe(id: string, updates: Partial<Recipe>): Promis
     updatedAt: new Date().toISOString()
   }
 
-  await storage.saveRecipe(updated)
+  await dataService.saveRecipe(updated)
 
   recipesStore.update(recipes =>
     recipes.map(r => r.id === id ? { ...r, ...updated } : r)
@@ -125,7 +125,7 @@ export async function updateRecipe(id: string, updates: Partial<Recipe>): Promis
 
 // Update metadata
 export async function updateMetadata(id: string, updates: Partial<RecipeMetadata>): Promise<void> {
-  const existing = await storage.getMetadata(id)
+  const existing = await dataService.getMetadata(id)
   if (!existing) throw new Error('Metadata not found')
 
   const updated: RecipeMetadata = {
@@ -134,7 +134,7 @@ export async function updateMetadata(id: string, updates: Partial<RecipeMetadata
     id // prevent ID change
   }
 
-  await storage.saveMetadata(updated)
+  await dataService.saveMetadata(updated)
 
   recipesStore.update(recipes =>
     recipes.map(r => r.id === id ? { ...r, metadata: updated } : r)
@@ -143,14 +143,14 @@ export async function updateMetadata(id: string, updates: Partial<RecipeMetadata
 
 // Delete a recipe
 export async function deleteRecipe(id: string): Promise<void> {
-  await storage.deleteRecipe(id)
+  await dataService.deleteRecipe(id)
 
   recipesStore.update(recipes => recipes.filter(r => r.id !== id))
 }
 
 // Add history entry
 export async function addHistoryEntry(id: string, notes?: string): Promise<void> {
-  const metadata = await storage.getMetadata(id)
+  const metadata = await dataService.getMetadata(id)
   if (!metadata) throw new Error('Metadata not found')
 
   const entry = {

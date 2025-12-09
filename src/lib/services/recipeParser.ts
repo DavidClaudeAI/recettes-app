@@ -1,0 +1,332 @@
+import type { Ingredient } from '../types'
+
+export interface ParsedRecipe {
+  title: string
+  source: string
+  prepTime?: number
+  cookTime?: number
+  servings: number
+  ingredients: Ingredient[]
+  steps: string[]
+  image?: string
+}
+
+// Parse ISO 8601 duration (PT15M, PT1H30M, etc.)
+function parseDuration(duration?: string): number | undefined {
+  if (!duration) return undefined
+
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/)
+  if (!match) return undefined
+
+  const hours = parseInt(match[1] || '0')
+  const minutes = parseInt(match[2] || '0')
+  return hours * 60 + minutes
+}
+
+// Parse yield/servings from various formats
+function parseServings(recipeYield: string | number | string[] | undefined): number {
+  if (!recipeYield) return 4
+
+  if (typeof recipeYield === 'number') return recipeYield
+
+  const yieldStr = Array.isArray(recipeYield) ? recipeYield[0] : recipeYield
+  const match = yieldStr.match(/(\d+)/)
+  return match ? parseInt(match[1]) : 4
+}
+
+// Parse ingredient string into structured format
+export function parseIngredientString(str: string): Ingredient {
+  // Clean up the string
+  str = str.trim().replace(/\s+/g, ' ')
+
+  // Common patterns for quantity + unit + ingredient
+  const patterns = [
+    // "2 cups flour" or "1/2 cup sugar"
+    /^([\d\/\.\,]+(?:\s*[\d\/]+)?)\s*(cups?|tasses?|c\.\s*à\s*s\.?|c\.\s*à\s*c\.?|cuillères?\s*à\s*(?:soupe|café)|tbsp?|tsp?|tablespoons?|teaspoons?|ml|cl|l|litres?|g|kg|grammes?|kilogrammes?|oz|ounces?|lb|lbs?|pounds?|pieces?|pièces?|tranches?|slices?|gousses?|cloves?)\s+(.+)$/i,
+    // "250g de farine" (French style)
+    /^([\d\/\.\,]+)\s*(g|kg|ml|cl|l)\s+(?:de\s+)?(.+)$/i,
+    // "2 oeufs" (no unit)
+    /^([\d\/\.\,]+)\s+(.+)$/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = str.match(pattern)
+    if (match) {
+      let quantity = parseQuantity(match[1])
+      let unit = match[2]?.toLowerCase() || ''
+      let name = match[3] || match[2] || str
+
+      // Normalize units
+      unit = normalizeUnit(unit)
+
+      return { quantity, unit, name: name.trim() }
+    }
+  }
+
+  // Fallback: just the name
+  return { quantity: 1, unit: '', name: str }
+}
+
+function parseQuantity(str: string): number {
+  str = str.replace(',', '.').trim()
+
+  // Handle fractions like "1/2" or "1 1/2"
+  if (str.includes('/')) {
+    const parts = str.split(/\s+/)
+    let total = 0
+
+    for (const part of parts) {
+      if (part.includes('/')) {
+        const [num, den] = part.split('/')
+        total += parseInt(num) / parseInt(den)
+      } else {
+        total += parseFloat(part) || 0
+      }
+    }
+    return total
+  }
+
+  return parseFloat(str) || 1
+}
+
+function normalizeUnit(unit: string): string {
+  const unitMap: Record<string, string> = {
+    'cup': 'tasse',
+    'cups': 'tasses',
+    'tbsp': 'c. à soupe',
+    'tablespoon': 'c. à soupe',
+    'tablespoons': 'c. à soupe',
+    'tsp': 'c. à café',
+    'teaspoon': 'c. à café',
+    'teaspoons': 'c. à café',
+    'c. à s.': 'c. à soupe',
+    'c. à c.': 'c. à café',
+    'cuillère à soupe': 'c. à soupe',
+    'cuillères à soupe': 'c. à soupe',
+    'cuillère à café': 'c. à café',
+    'cuillères à café': 'c. à café',
+    'gramme': 'g',
+    'grammes': 'g',
+    'kilogramme': 'kg',
+    'kilogrammes': 'kg',
+    'litre': 'L',
+    'litres': 'L',
+    'l': 'L',
+    'ounce': 'oz',
+    'ounces': 'oz',
+    'pound': 'lb',
+    'pounds': 'lb',
+    'lbs': 'lb',
+    'piece': '',
+    'pieces': '',
+    'pièce': '',
+    'pièces': '',
+  }
+
+  return unitMap[unit.toLowerCase()] || unit
+}
+
+// Check if type matches (handles prefixes like "schema:HowToStep")
+function isType(item: any, typeName: string): boolean {
+  const type = item['@type']
+  if (!type) return false
+  if (Array.isArray(type)) {
+    return type.some(t => t === typeName || t.endsWith(`:${typeName}`) || t.endsWith(`/${typeName}`))
+  }
+  return type === typeName || type.endsWith(`:${typeName}`) || type.endsWith(`/${typeName}`)
+}
+
+// Parse instructions from various formats
+function parseInstructions(instructions: any): string[] {
+  if (!instructions) return []
+
+  // Array of items
+  if (Array.isArray(instructions)) {
+    return instructions.flatMap(item => {
+      if (typeof item === 'string') return [item]
+      if (isType(item, 'HowToStep')) {
+        return [item.text || item.description || item.name || '']
+      }
+      if (isType(item, 'HowToSection')) {
+        return parseInstructions(item.itemListElement)
+      }
+      // Object without @type but with text
+      if (item.text) return [item.text]
+      return []
+    }).filter(s => s.trim())
+  }
+
+  // Single string (split by newlines or numbered steps)
+  if (typeof instructions === 'string') {
+    return instructions
+      .split(/\n|(?=\d+\.\s)/)
+      .map(s => s.replace(/^\d+\.\s*/, '').trim())
+      .filter(s => s)
+  }
+
+  // Single object
+  if (typeof instructions === 'object' && instructions.text) {
+    return [instructions.text]
+  }
+
+  return []
+}
+
+// Extract JSON-LD from HTML
+export function extractJsonLd(html: string): any[] {
+  const scripts: any[] = []
+  const regex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+
+  let match
+  while ((match = regex.exec(html)) !== null) {
+    try {
+      const json = JSON.parse(match[1])
+      if (Array.isArray(json)) {
+        scripts.push(...json)
+      } else {
+        scripts.push(json)
+      }
+    } catch (e) {
+      // Ignore invalid JSON
+    }
+  }
+
+  return scripts
+}
+
+// Find Recipe schema in JSON-LD
+function findRecipeSchema(jsonLdList: any[]): any | null {
+  for (const item of jsonLdList) {
+    if (isType(item, 'Recipe')) {
+      return item
+    }
+    if (item['@graph']) {
+      const found = findRecipeSchema(item['@graph'])
+      if (found) return found
+    }
+  }
+  return null
+}
+
+// Fetch image and convert to base64
+async function fetchImageAsBase64(imageUrl: string): Promise<string | undefined> {
+  if (!imageUrl) return undefined
+
+  try {
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(imageUrl)}`
+    const response = await fetch(proxyUrl)
+
+    if (!response.ok) return undefined
+
+    const blob = await response.blob()
+    if (!blob.type.startsWith('image/')) return undefined
+
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onloadend = () => resolve(reader.result as string)
+      reader.onerror = () => resolve(undefined)
+      reader.readAsDataURL(blob)
+    })
+  } catch {
+    return undefined
+  }
+}
+
+// Main parsing function
+export function parseRecipeFromHtml(html: string, sourceUrl: string): ParsedRecipe | null {
+  const jsonLdList = extractJsonLd(html)
+  const recipeSchema = findRecipeSchema(jsonLdList)
+
+  if (!recipeSchema) {
+    return null
+  }
+
+  const ingredients = (recipeSchema.recipeIngredient || []).map(parseIngredientString)
+  const steps = parseInstructions(recipeSchema.recipeInstructions || recipeSchema.recipeSteps)
+
+  return {
+    title: recipeSchema.name || 'Recette sans titre',
+    source: sourceUrl,
+    prepTime: parseDuration(recipeSchema.prepTime),
+    cookTime: parseDuration(recipeSchema.cookTime),
+    servings: parseServings(recipeSchema.recipeYield),
+    ingredients,
+    steps,
+    image: Array.isArray(recipeSchema.image)
+      ? recipeSchema.image[0]
+      : recipeSchema.image?.url || recipeSchema.image
+  }
+}
+
+// CORS proxies to try in order
+const CORS_PROXIES = [
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+]
+
+// Fetch with timeout
+async function fetchWithTimeout(url: string, timeout = 15000): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+  try {
+    const response = await fetch(url, { signal: controller.signal })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
+  }
+}
+
+// Fetch HTML through CORS proxy with fallback
+async function fetchHtmlWithProxy(url: string): Promise<string> {
+  let lastError: Error | null = null
+
+  for (const proxyFn of CORS_PROXIES) {
+    const proxyUrl = proxyFn(url)
+    try {
+      const response = await fetchWithTimeout(proxyUrl)
+      if (response.ok) {
+        return await response.text()
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Erreur réseau')
+      // Continue to next proxy
+    }
+  }
+
+  throw lastError || new Error('Impossible de charger la page après plusieurs tentatives')
+}
+
+// Progress callback type
+export type ProgressCallback = (step: string) => void
+
+// Fetch and parse a recipe URL
+export async function fetchAndParseRecipe(
+  url: string,
+  onProgress?: ProgressCallback
+): Promise<ParsedRecipe> {
+  onProgress?.('Chargement de la page...')
+  const html = await fetchHtmlWithProxy(url)
+
+  onProgress?.('Analyse de la recette...')
+  const recipe = parseRecipeFromHtml(html, url)
+
+  if (!recipe) {
+    throw new Error('Aucune recette schema.org trouvée sur cette page')
+  }
+
+  // Convert image URL to base64
+  if (recipe.image) {
+    onProgress?.('Téléchargement de l\'image...')
+    const base64Image = await fetchImageAsBase64(recipe.image)
+    if (base64Image) {
+      recipe.image = base64Image
+    }
+  }
+
+  onProgress?.('Terminé !')
+  return recipe
+}

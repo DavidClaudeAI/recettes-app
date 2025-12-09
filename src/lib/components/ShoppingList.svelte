@@ -173,6 +173,8 @@
     currentList.name = editingName.trim()
     currentList.updatedAt = new Date().toISOString()
     await saveShoppingList(currentList)
+    // Update local state
+    allLists = allLists.map(l => l.id === currentList.id ? currentList : l)
     showRenameModal = false
   }
 
@@ -182,14 +184,20 @@
     currentList.status = status
     currentList.updatedAt = new Date().toISOString()
     await saveShoppingList(currentList)
+    // Update local state
+    allLists = allLists.map(l => l.id === currentList.id ? currentList : l)
   }
 
   // Delete
   async function deleteCurrentList() {
     if (!currentList) return
     if (!confirm(`Supprimer la liste "${currentList.name}" ?`)) return
-    await deleteShoppingList(currentList.id)
-    backToLists()
+    const deletedId = currentList.id
+    await deleteShoppingList(deletedId)
+    // Update local state immediately instead of refetching
+    allLists = allLists.filter(l => l.id !== deletedId)
+    view = 'lists'
+    currentList = null
   }
 
   // Items management

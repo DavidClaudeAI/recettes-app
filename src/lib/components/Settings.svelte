@@ -15,7 +15,7 @@
     exportLocalData,
     getStorageMode,
     getAllRecipes,
-    saveRecipe
+    saveAllRecipes
   } from '../services/dataService'
 
   let token = $state('')
@@ -153,6 +153,7 @@
       const recipes = await getAllRecipes()
       let fixedCount = 0
 
+      // Modify all recipes in memory first
       for (const recipe of recipes) {
         let modified = false
 
@@ -165,9 +166,13 @@
         }
 
         if (modified) {
-          await saveRecipe(recipe)
           fixedCount++
         }
+      }
+
+      // Save all at once to avoid conflicts
+      if (fixedCount > 0) {
+        await saveAllRecipes(recipes)
       }
 
       repairResult = { success: true, fixed: fixedCount }

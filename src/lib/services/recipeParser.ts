@@ -289,7 +289,10 @@ async function fetchHtmlWithProxy(url: string): Promise<string> {
     try {
       const response = await fetchWithTimeout(proxyUrl)
       if (response.ok) {
-        return await response.text()
+        // Force UTF-8 decoding to avoid encoding issues
+        const buffer = await response.arrayBuffer()
+        const decoder = new TextDecoder('utf-8')
+        return decoder.decode(buffer)
       }
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Erreur réseau')

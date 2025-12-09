@@ -47,6 +47,17 @@ export async function deleteRecipe(id: string): Promise<void> {
   return local.deleteRecipe(id)
 }
 
+export async function saveAllRecipes(recipes: Recipe[]): Promise<void> {
+  const config = github.getGitHubConfig()
+  if (config) {
+    return github.saveAllRecipes(config, recipes)
+  }
+  // For local, save each recipe
+  for (const recipe of recipes) {
+    await local.saveRecipe(recipe)
+  }
+}
+
 // ============ METADATA ============
 
 export async function getMetadata(id: string): Promise<RecipeMetadata | undefined> {

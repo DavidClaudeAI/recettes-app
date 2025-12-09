@@ -284,6 +284,10 @@ export async function deleteRecipe(config: GitHubConfig, id: string): Promise<vo
   await saveData(config, 'metadata', filteredMeta, `Delete metadata ${id}`)
 }
 
+export async function saveAllRecipes(config: GitHubConfig, recipes: Recipe[]): Promise<void> {
+  await saveData(config, 'recipes', recipes, `Bulk update ${recipes.length} recipes`)
+}
+
 // ============ METADATA ============
 
 export async function getAllMetadata(config: GitHubConfig): Promise<RecipeMetadata[]> {

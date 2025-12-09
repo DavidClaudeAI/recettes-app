@@ -555,6 +555,10 @@
     min-width: 80px;
   }
 
+  .ingredients-list .name {
+    color: white;
+  }
+
   .floating-timers {
     position: fixed;
     top: 80px;

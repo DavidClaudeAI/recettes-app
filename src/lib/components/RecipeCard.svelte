@@ -79,7 +79,7 @@
 
     <div class="card-actions">
       <a href="#/recipes/{recipe.id}" class="btn-view">Voir</a>
-      <a href="#/recipes/{recipe.id}/cook" class="btn-cook" title="Mode cuisine">👨‍🍳</a>
+      <a href="#/cooking/{recipe.id}" class="btn-cook" title="Mode cuisine">👨‍🍳</a>
     </div>
   </div>
 </article>

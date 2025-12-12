@@ -434,6 +434,20 @@ export async function fetchAndParseRecipe(
     console.log(`[Import] Trouvé window.Mrtn.recipesData:`, mrtnMatch[1].substring(0, 200))
   }
 
+  // Debug: check for ingredient/step patterns in HTML (for sites without JSON-LD)
+  if (url.includes('marmiton.org')) {
+    // Look for recipe content in the HTML structure
+    const ingredientClasses = html.match(/class="[^"]*ingredient[^"]*"/gi) || []
+    const stepClasses = html.match(/class="[^"]*instruction[^"]*|class="[^"]*step[^"]*"/gi) || []
+    console.log(`[Import] Marmiton: ${ingredientClasses.length} classes ingredient, ${stepClasses.length} classes step/instruction`)
+
+    // Sample some content
+    const bodyStart = html.indexOf('<body')
+    if (bodyStart > 0) {
+      console.log(`[Import] Début du <body>:`, html.substring(bodyStart, bodyStart + 2000))
+    }
+  }
+
   if (ldJsonCount === 0) {
     // Log a sample around where JSON-LD typically appears
     const headEnd = html.indexOf('</head>')

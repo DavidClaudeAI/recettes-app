@@ -707,5 +707,58 @@
     "id": "e9bc6e55-b7ad-4b52-89ad-a65ef1443d9d",
     "createdAt": "2025-12-10T15:28:32.474Z",
     "updatedAt": "2025-12-10T15:28:32.474Z"
+  },
+  {
+    "title": "Hachis parmentier traditionnel et maison",
+    "source": "https://www.750g.com/hachis-parmentier-rapide-r1613.htm",
+    "image": "https://static.750g.com/images/1200-675/e3845738dd9b4d26772888c22d61d9df/hachis-parmentier-rapide.jpg",
+    "prepTime": 20,
+    "cookTime": 25,
+    "servings": 4,
+    "ingredients": [
+      {
+        "quantity": 1.2,
+        "unit": "kg",
+        "name": "pomme de terre"
+      },
+      {
+        "quantity": 750,
+        "unit": "g",
+        "name": "boeuf haché"
+      },
+      {
+        "quantity": 50,
+        "unit": "g",
+        "name": "beurre"
+      },
+      {
+        "quantity": 60,
+        "unit": "cl",
+        "name": "lait"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "Sel ou sel fin"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "Poivre du moulin"
+      }
+    ],
+    "steps": [
+      "Faire cuire les pommes de terre &agrave; la vapeur.",
+      "Les peler une fois qu'elles sont cuites.",
+      "Les &eacute;craser pour former une pur&eacute;e.",
+      "M&eacute;langer avec le beurre.",
+      "Verser le lait chaud dessus.",
+      "Placer la viande hach&eacute;e assaisonn&eacute;e au fond d'un plat.",
+      "Recouvrir avec la pur&eacute;e.",
+      "Cuire&nbsp;25 minutes au four &agrave; 180&deg;C."
+    ],
+    "id": "73cd269b-d07c-4243-b1ec-0ac35e313a62",
+    "createdAt": "2025-12-12T18:25:56.983Z",
+    "updatedAt": "2025-12-12T18:25:56.983Z"
   }
 ]

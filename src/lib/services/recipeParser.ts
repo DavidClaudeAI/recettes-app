@@ -323,15 +323,16 @@ export function parseRecipeFromHtml(html: string, sourceUrl: string): ParsedReci
   }
 }
 
-// CORS proxies to try in order
+// CORS proxies to try in order (corsproxy.io first - works for most sites including 750g.com)
 const CORS_PROXIES = [
-  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  (url: string) => `https://proxy.cors.sh/${url}`
 ]
 
-// Fetch with timeout
-async function fetchWithTimeout(url: string, timeout = 15000): Promise<Response> {
+// Fetch with timeout (20s to handle slow proxies)
+async function fetchWithTimeout(url: string, timeout = 20000): Promise<Response> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeout)
 
@@ -349,18 +350,26 @@ async function fetchWithTimeout(url: string, timeout = 15000): Promise<Response>
 async function fetchHtmlWithProxy(url: string): Promise<string> {
   let lastError: Error | null = null
 
-  for (const proxyFn of CORS_PROXIES) {
+  for (let i = 0; i < CORS_PROXIES.length; i++) {
+    const proxyFn = CORS_PROXIES[i]
     const proxyUrl = proxyFn(url)
     try {
+      console.log(`[Import] Tentative ${i + 1}/${CORS_PROXIES.length}...`)
       const response = await fetchWithTimeout(proxyUrl)
       if (response.ok) {
+        console.log(`[Import] Succès avec le proxy ${i + 1}`)
         // Force UTF-8 decoding to avoid encoding issues
         const buffer = await response.arrayBuffer()
         const decoder = new TextDecoder('utf-8')
         return decoder.decode(buffer)
+      } else {
+        console.warn(`[Import] Proxy ${i + 1} a échoué avec status ${response.status}`)
+        lastError = new Error(`HTTP ${response.status}`)
       }
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error('Erreur réseau')
+      const errorMsg = error instanceof Error ? error.message : 'Erreur réseau'
+      console.warn(`[Import] Proxy ${i + 1} erreur: ${errorMsg}`)
+      lastError = error instanceof Error ? error : new Error(errorMsg)
       // Continue to next proxy
     }
   }

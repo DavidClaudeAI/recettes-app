@@ -707,5 +707,117 @@
     "id": "e9bc6e55-b7ad-4b52-89ad-a65ef1443d9d",
     "createdAt": "2025-12-10T15:28:32.474Z",
     "updatedAt": "2025-12-10T15:28:32.474Z"
+  },
+  {
+    "title": "Chicken Makhani (Indian Butter Chicken)",
+    "source": "https://www.allrecipes.com/recipe/45957/chicken-makhani-indian-butter-chicken/",
+    "image": "https://www.allrecipes.com/thmb/Icn_f4w0fMLbRrV78v8bMSkwfhs=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/45957-ChickenMakhaniIndianButterChicken-mfs-4X3-0037-7aa9a555bf3943baae20c5c3b0921375.jpg",
+    "prepTime": 10,
+    "cookTime": 25,
+    "servings": 4,
+    "ingredients": [
+      {
+        "quantity": 2,
+        "unit": "c. à soupe",
+        "name": "peanut oil, divided"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "shallot, finely chopped"
+      },
+      {
+        "quantity": 0.2,
+        "unit": "",
+        "name": "white onion, chopped"
+      },
+      {
+        "quantity": 2,
+        "unit": "c. à soupe",
+        "name": "butter"
+      },
+      {
+        "quantity": 1,
+        "unit": "c. à soupe",
+        "name": "ginger garlic paste"
+      },
+      {
+        "quantity": 2,
+        "unit": "c. à café",
+        "name": "lemon juice"
+      },
+      {
+        "quantity": 2,
+        "unit": "c. à café",
+        "name": "garam masala, divided"
+      },
+      {
+        "quantity": 1,
+        "unit": "c. à café",
+        "name": "chili powder"
+      },
+      {
+        "quantity": 1,
+        "unit": "c. à café",
+        "name": "ground cumin"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "bay leaf"
+      },
+      {
+        "quantity": 1,
+        "unit": "tasse",
+        "name": "tomato puree"
+      },
+      {
+        "quantity": 1,
+        "unit": "tasse",
+        "name": "half-and-half"
+      },
+      {
+        "quantity": 0.2,
+        "unit": "tasse",
+        "name": "plain yogurt"
+      },
+      {
+        "quantity": 1,
+        "unit": "",
+        "name": "pinch salt and ground black pepper to taste"
+      },
+      {
+        "quantity": 1,
+        "unit": "lb",
+        "name": "boneless, skinless chicken thighs, cut into bite-size pieces"
+      },
+      {
+        "quantity": 0.2,
+        "unit": "c. à café",
+        "name": "cayenne pepper, or to taste"
+      },
+      {
+        "quantity": 1,
+        "unit": "c. à soupe",
+        "name": "cornstarch"
+      },
+      {
+        "quantity": 0.2,
+        "unit": "tasse",
+        "name": "water"
+      }
+    ],
+    "steps": [
+      "Heat 1 tablespoon oil in a large saucepan over medium-high heat. Sauté shallot and onion until soft and translucent, about 5 minutes.",
+      "Stir in butter, ginger-garlic paste, lemon juice, 1 teaspoon garam masala, chili powder, cumin, and bay leaf. Cook and stir for 1 minute. Add tomato sauce, and cook for 2 minutes, continuing to frequently stir.",
+      "Stir in half-and-half and yogurt. Reduce heat to low, and simmer for 10 minutes, frequently stirring. Season with salt and pepper. Remove from heat and set aside.",
+      "Heat remaining 1 tablespoon oil in a large heavy skillet over medium heat. Cook chicken until lightly browned, about 10 minutes.",
+      "Reduce heat, and season with remaining 1 teaspoon garam masala and cayenne. Stir in a few spoonfuls of sauce, and simmer until liquid has reduced, and chicken is no longer pink. Add cooked chicken into sauce and stir together.",
+      "Dissolve cornstarch into water, then mix into the sauce. Cook for 5 to 10 minutes, or until thickened.",
+      "Serve over rice with naan."
+    ],
+    "id": "a6f7c442-f297-4342-ab95-c79ed4f8c4b1",
+    "createdAt": "2025-12-12T18:54:20.515Z",
+    "updatedAt": "2025-12-12T18:54:20.515Z"
   }
 ]

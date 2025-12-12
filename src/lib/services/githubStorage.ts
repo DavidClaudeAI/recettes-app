@@ -1,6 +1,11 @@
 // GitHub Storage Service
 // Stores data as JSON files in a GitHub repository
 
+// Hardcoded repo configuration (same repo as the app)
+const DEFAULT_OWNER = 'DavidClaudeAI'
+const DEFAULT_REPO = 'recettes-app'
+const DEFAULT_BRANCH = 'main'
+
 export interface GitHubConfig {
   token: string
   owner: string
@@ -13,23 +18,29 @@ interface GitHubFile {
   sha: string
 }
 
-const CONFIG_KEY = 'github-config'
+const CONFIG_KEY = 'github-token'
 const DATA_PATH = 'data'
 
-// Get stored config from localStorage
+// Get stored config from localStorage (only token is stored, rest is hardcoded)
 export function getGitHubConfig(): GitHubConfig | null {
-  const stored = localStorage.getItem(CONFIG_KEY)
-  if (!stored) return null
-  try {
-    return JSON.parse(stored)
-  } catch {
-    return null
+  const token = localStorage.getItem(CONFIG_KEY)
+  if (!token) return null
+  return {
+    token,
+    owner: DEFAULT_OWNER,
+    repo: DEFAULT_REPO,
+    branch: DEFAULT_BRANCH
   }
 }
 
-// Save config to localStorage
+// Save token to localStorage (owner/repo/branch are hardcoded)
 export function saveGitHubConfig(config: GitHubConfig): void {
-  localStorage.setItem(CONFIG_KEY, JSON.stringify(config))
+  localStorage.setItem(CONFIG_KEY, config.token)
+}
+
+// Save just the token
+export function saveGitHubToken(token: string): void {
+  localStorage.setItem(CONFIG_KEY, token)
 }
 
 // Clear config
@@ -37,10 +48,19 @@ export function clearGitHubConfig(): void {
   localStorage.removeItem(CONFIG_KEY)
 }
 
-// Check if GitHub is configured
+// Check if GitHub is configured (just need a token)
 export function isGitHubConfigured(): boolean {
-  const config = getGitHubConfig()
-  return !!(config?.token && config?.owner && config?.repo)
+  const token = localStorage.getItem(CONFIG_KEY)
+  return !!token
+}
+
+// Get the hardcoded repo info for display
+export function getRepoInfo(): { owner: string; repo: string; branch: string } {
+  return {
+    owner: DEFAULT_OWNER,
+    repo: DEFAULT_REPO,
+    branch: DEFAULT_BRANCH
+  }
 }
 
 // GitHub API helpers

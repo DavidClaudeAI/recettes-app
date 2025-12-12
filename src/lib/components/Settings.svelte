@@ -7,6 +7,8 @@
     testGitHubConnection,
     isGitHubConfigured,
     initializeDataFolder,
+    getRepoInfo,
+    saveGitHubToken,
     type GitHubConfig
   } from '../services/githubStorage'
   import {
@@ -19,9 +21,9 @@
   } from '../services/dataService'
 
   let token = $state('')
-  let owner = $state('')
-  let repo = $state('')
-  let branch = $state('main')
+
+  // Repo info is hardcoded
+  const repoInfo = getRepoInfo()
 
   let testing = $state(false)
   let testResult = $state<{ success: boolean; error?: string } | null>(null)
@@ -39,9 +41,6 @@
     const config = getGitHubConfig()
     if (config) {
       token = config.token
-      owner = config.owner
-      repo = config.repo
-      branch = config.branch || 'main'
     }
     isConfigured = isGitHubConfigured()
     storageMode = getStorageMode()
@@ -64,9 +63,9 @@
 
     const config: GitHubConfig = {
       token,
-      owner,
-      repo,
-      branch
+      owner: repoInfo.owner,
+      repo: repoInfo.repo,
+      branch: repoInfo.branch
     }
 
     testResult = await testGitHubConnection(config)
@@ -76,9 +75,9 @@
   async function saveConfig() {
     const config: GitHubConfig = {
       token,
-      owner,
-      repo,
-      branch
+      owner: repoInfo.owner,
+      repo: repoInfo.repo,
+      branch: repoInfo.branch
     }
 
     // Test first
@@ -97,7 +96,7 @@
       console.error('Error initializing data folder:', e)
     }
 
-    saveGitHubConfig(config)
+    saveGitHubToken(token)
     isConfigured = true
     storageMode = 'github'
 
@@ -129,9 +128,6 @@
 
     clearGitHubConfig()
     token = ''
-    owner = ''
-    repo = ''
-    branch = 'main'
     isConfigured = false
     storageMode = 'local'
     testResult = null
@@ -211,7 +207,7 @@
   <section class="section">
     <h2>Configuration GitHub</h2>
     <p class="section-desc">
-      Stockez vos recettes dans un repository GitHub pour y acceder depuis plusieurs appareils.
+      Les donnees sont stockees dans le repo <strong>{repoInfo.owner}/{repoInfo.repo}</strong> (branche {repoInfo.branch}).
     </p>
 
     <div class="form-group">
@@ -220,43 +216,11 @@
         type="password"
         id="token"
         bind:value={token}
-        placeholder="ghp_xxxxxxxxxxxx"
+        placeholder="ghp_xxxxxxxxxxxx ou github_pat_..."
       />
       <a href={createTokenUrl()} target="_blank" rel="noopener" class="help-link">
         Creer un token (Fine-grained, limite a ce repo)
       </a>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label for="owner">Proprietaire</label>
-        <input
-          type="text"
-          id="owner"
-          bind:value={owner}
-          placeholder="votre-username"
-        />
-      </div>
-
-      <div class="form-group">
-        <label for="repo">Repository</label>
-        <input
-          type="text"
-          id="repo"
-          bind:value={repo}
-          placeholder="mes-recettes"
-        />
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label for="branch">Branche</label>
-      <input
-        type="text"
-        id="branch"
-        bind:value={branch}
-        placeholder="main"
-      />
     </div>
 
     {#if testResult}
@@ -270,7 +234,7 @@
     {/if}
 
     <div class="button-row">
-      <button class="btn-secondary" onclick={testConnection} disabled={testing || !token || !owner || !repo}>
+      <button class="btn-secondary" onclick={testConnection} disabled={testing || !token}>
         {testing ? 'Test...' : 'Tester la connexion'}
       </button>
 
@@ -280,7 +244,7 @@
         </button>
       {/if}
 
-      <button class="btn-primary" onclick={saveConfig} disabled={testing || !token || !owner || !repo}>
+      <button class="btn-primary" onclick={saveConfig} disabled={testing || !token}>
         Sauvegarder
       </button>
     </div>
@@ -336,24 +300,18 @@
     <h2>Instructions</h2>
     <ol class="instructions">
       <li>
-        <strong>Creez un repository GitHub</strong> (public ou prive) pour stocker vos recettes
-      </li>
-      <li>
         <strong>Generez un Fine-grained token</strong> sur
         <a href={createTokenUrl()} target="_blank" rel="noopener">github.com/settings/personal-access-tokens</a>
         <ul>
-          <li>Repository access: Only select repositories → votre repo</li>
+          <li>Repository access: Only select repositories → {repoInfo.owner}/{repoInfo.repo}</li>
           <li>Permissions: Contents → Read and write</li>
         </ul>
       </li>
       <li>
-        <strong>Remplissez le formulaire</strong> ci-dessus et testez la connexion
+        <strong>Collez le token</strong> ci-dessus et testez la connexion
       </li>
       <li>
-        <strong>Migrez vos donnees</strong> existantes vers GitHub
-      </li>
-      <li>
-        <strong>Deployez sur GitHub Pages</strong> pour acceder a l'app depuis n'importe ou
+        <strong>Sauvegardez</strong> pour activer la synchronisation GitHub
       </li>
     </ol>
   </section>
@@ -443,12 +401,6 @@
   .form-group input:focus {
     outline: none;
     border-color: #10b981;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
   }
 
   .help-link {
@@ -552,10 +504,6 @@
   }
 
   @media (max-width: 480px) {
-    .form-row {
-      grid-template-columns: 1fr;
-    }
-
     .button-row {
       flex-direction: column;
     }

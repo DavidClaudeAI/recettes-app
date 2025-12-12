@@ -1,0 +1,92 @@
+[
+  {
+    "id": "0d69d153-56ee-40cf-b0fa-5f7502dfcb42",
+    "status": "testing",
+    "tags": [
+      "asiatique"
+    ],
+    "history": []
+  },
+  {
+    "id": "8b688b70-085b-42af-9101-ee1235bf1e42",
+    "status": "validated",
+    "tags": [
+      "asiatique"
+    ],
+    "history": [
+      {
+        "date": "2025-12-08T12:21:59.091Z",
+        "notes": "Impec"
+      }
+    ],
+    "rating": 5
+  },
+  {
+    "id": "958dcd1f-0f9f-4242-a58e-1211104215a1",
+    "status": "validated",
+    "tags": [
+      "asiatique"
+    ],
+    "history": [
+      {
+        "date": "2025-12-09T16:36:13.116Z",
+        "notes": "Augmenter les doses de lÃÂ©gumes, et pas trop de poulet"
+      }
+    ],
+    "rating": 4
+  },
+  {
+    "id": "b60ecc69-bc26-4da3-804c-34cab0b155ac",
+    "status": "to-test",
+    "tags": [
+      "asiatique"
+    ],
+    "history": []
+  },
+  {
+    "id": "c7e7f070-ad6e-45f7-832b-c6131b989500",
+    "status": "validated",
+    "tags": [
+      "asiatique"
+    ],
+    "history": [
+      {
+        "date": "2025-12-09T16:50:01.300Z",
+        "notes": "Super"
+      }
+    ],
+    "rating": 5
+  },
+  {
+    "id": "f60093de-7d42-4642-b9e7-b3b0dea1e983",
+    "status": "to-test",
+    "tags": [
+      "asiatique"
+    ],
+    "history": []
+  },
+  {
+    "id": "86e7de2e-4e24-4a21-97dc-43db707969b7",
+    "status": "to-test",
+    "tags": [
+      "maman",
+      "valérie"
+    ],
+    "history": [],
+    "rating": 5
+  },
+  {
+    "id": "e9bc6e55-b7ad-4b52-89ad-a65ef1443d9d",
+    "status": "to-test",
+    "tags": [
+      "asiatique"
+    ],
+    "history": []
+  },
+  {
+    "id": "c7687c91-a37e-48b9-8d53-0889f59db2a3",
+    "status": "to-test",
+    "tags": [],
+    "history": []
+  }
+]

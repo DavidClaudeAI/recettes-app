@@ -1,0 +1,23 @@
+[
+  {
+    "id": "6afa1604-7049-4542-b445-af784ecff82d",
+    "weekStart": "2025-12-07",
+    "day": 2,
+    "slot": "dinner",
+    "recipeId": "8b688b70-085b-42af-9101-ee1235bf1e42"
+  },
+  {
+    "id": "df29090b-ce39-4fc6-8f4b-f921622fc35a",
+    "weekStart": "2025-12-07",
+    "day": 4,
+    "slot": "lunch",
+    "recipeId": "0d69d153-56ee-40cf-b0fa-5f7502dfcb42"
+  },
+  {
+    "id": "69bc9fb2-2a39-4090-9b32-6f9d80383d48",
+    "weekStart": "2025-12-07",
+    "day": 4,
+    "slot": "dinner",
+    "recipeId": "958dcd1f-0f9f-4242-a58e-1211104215a1"
+  }
+]

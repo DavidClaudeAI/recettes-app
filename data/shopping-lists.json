@@ -1,1 +1,186 @@
-[]
+[
+  {
+    "id": "aec6e93c-aee7-433d-86bd-4502f7e27048",
+    "name": "Les authentiques nems vietnamiens au porc",
+    "createdAt": "2025-12-12T18:16:40.684Z",
+    "status": "active",
+    "items": [
+      {
+        "id": "2263f078-3120-4632-9889-28c2d84eb94b",
+        "name": "Du piment (optionnel)",
+        "quantity": 1,
+        "unit": "",
+        "checked": false,
+        "category": "Autres",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "4c842785-8471-4aa0-b114-7b4ecdc9748d",
+        "name": "d'eau",
+        "quantity": 125,
+        "unit": "ml",
+        "checked": false,
+        "category": "Boissons",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "5e09066a-00f0-41ae-a5a7-856d27026b6b",
+        "name": "galettes de riz de 22 cm de diamètre",
+        "quantity": 22,
+        "unit": "",
+        "checked": false,
+        "category": "Epicerie",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "d0641caf-a360-41cf-846e-dee54ecdfd22",
+        "name": "de vermicelle de riz non réhydraté",
+        "quantity": 50,
+        "unit": "g",
+        "checked": false,
+        "category": "Epicerie",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "5bd5bab7-26dd-42b6-93f2-7a24571e612d",
+        "name": "cc de sel",
+        "quantity": 1,
+        "unit": "",
+        "checked": false,
+        "category": "Epicerie",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "722ad559-7dc6-4f9a-a550-eeba560e8c6e",
+        "name": "cc de poivre - blanc de préférence",
+        "quantity": 1,
+        "unit": "",
+        "checked": false,
+        "category": "Epicerie",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "b5ad384c-a16f-432b-8832-3a93ec5d133c",
+        "name": "CS de sucre",
+        "quantity": 2,
+        "unit": "cs de sucre",
+        "checked": false,
+        "category": "Epicerie",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "0792a958-5a1b-449b-bdb4-fd20a8cccead",
+        "name": "de carottes",
+        "quantity": 200,
+        "unit": "g",
+        "checked": false,
+        "category": "Fruits & Legumes",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "8e78e477-db1f-4696-8c97-5910c1d1ff3c",
+        "name": "de pousses de haricot mungo",
+        "quantity": 150,
+        "unit": "g",
+        "checked": false,
+        "category": "Fruits & Legumes",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "171086cd-27a3-4872-8533-23766603330d",
+        "name": "de champignons noirs séchés",
+        "quantity": 10,
+        "unit": "g",
+        "checked": false,
+        "category": "Fruits & Legumes",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "7498e7a7-4226-40df-bb98-8f63d82cd2eb",
+        "name": "oignon blanc",
+        "quantity": 1,
+        "unit": "",
+        "checked": false,
+        "category": "Fruits & Legumes",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "b2b9aa83-5820-4041-b86c-e8df0a36c534",
+        "name": "d'ail",
+        "quantity": 2,
+        "unit": "gousses",
+        "checked": false,
+        "category": "Fruits & Legumes",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "fc78f821-8de3-4a21-8c0d-d0dacef81ca2",
+        "name": "CS de jus de citron vert",
+        "quantity": 3,
+        "unit": "cs de jus de citron vert",
+        "checked": false,
+        "category": "Fruits & Legumes",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "8f570aa7-74f4-403a-bda0-23b692c4f77c",
+        "name": "blanc d'oeuf",
+        "quantity": 1,
+        "unit": "",
+        "checked": false,
+        "category": "Produits laitiers",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "cff6110f-9b09-4e74-ae81-862a334c3292",
+        "name": "de porc haché",
+        "quantity": 500,
+        "unit": "g",
+        "checked": false,
+        "category": "Viandes & Poissons",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      },
+      {
+        "id": "74c875a4-4f41-4681-ae6d-b967a8855d11",
+        "name": "CS de sauce poisson",
+        "quantity": 3.5,
+        "unit": "cs de sauce poisson",
+        "checked": false,
+        "category": "Viandes & Poissons",
+        "fromRecipes": [
+          "Les authentiques nems vietnamiens au porc"
+        ]
+      }
+    ]
+  }
+]

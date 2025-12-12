@@ -12,12 +12,11 @@ export function secureImageUrl(url: string | undefined): string | undefined {
   return url
 }
 
-// Decode HTML entities like &#39; &amp; etc.
+// Decode HTML entities like &#39; &amp; etc. (using DOMParser for safety)
 function decodeHtmlEntities(text: string): string {
   if (!text) return text
-  const textarea = document.createElement('textarea')
-  textarea.innerHTML = text
-  return textarea.value
+  const doc = new DOMParser().parseFromString(text, 'text/html')
+  return doc.body.textContent || text
 }
 
 export interface ParsedRecipe {

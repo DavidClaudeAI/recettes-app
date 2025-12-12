@@ -21,6 +21,21 @@ interface GitHubFile {
 const CONFIG_KEY = 'github-token'
 const DATA_PATH = 'data'
 
+// UTF-8 safe Base64 encoding/decoding (replaces deprecated unescape/escape)
+function encodeBase64Utf8(content: string): string {
+  const encoder = new TextEncoder()
+  const bytes = encoder.encode(content)
+  const binString = Array.from(bytes, b => String.fromCharCode(b)).join('')
+  return btoa(binString)
+}
+
+function decodeBase64Utf8(base64: string): string {
+  const binString = atob(base64.replace(/\n/g, ''))
+  const bytes = Uint8Array.from(binString, c => c.charCodeAt(0))
+  const decoder = new TextDecoder()
+  return decoder.decode(bytes)
+}
+
 // Get stored config from localStorage (only token is stored, rest is hardcoded)
 export function getGitHubConfig(): GitHubConfig | null {
   const token = localStorage.getItem(CONFIG_KEY)
@@ -100,7 +115,7 @@ async function getFile(config: GitHubConfig, path: string, noCache = false): Pro
 
   const data = await response.json()
   // Decode base64 + UTF-8 properly
-  const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))))
+  const content = decodeBase64Utf8(data.content)
 
   return {
     content,
@@ -118,7 +133,7 @@ async function saveFile(
 ): Promise<void> {
   const body: Record<string, string> = {
     message,
-    content: btoa(unescape(encodeURIComponent(content))),
+    content: encodeBase64Utf8(content),
     branch: config.branch
   }
 

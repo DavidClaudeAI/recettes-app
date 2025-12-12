@@ -64,6 +64,21 @@ describe('parseIngredientString', () => {
     expect(result.quantity).toBe(0.5) // 1/2 -> 0.5
     expect(result.unit).toBe('tasse') // cup -> tasse
   })
+
+  it('should decode HTML entities like &eacute;', () => {
+    const result = parseIngredientString('viande hach&eacute;e')
+    expect(result.name).toBe('viande hachée')
+  })
+
+  it('should decode numeric HTML entities like &#233;', () => {
+    const result = parseIngredientString('cr&#232;me fra&#238;che')
+    expect(result.name).toBe('crème fraîche')
+  })
+
+  it('should decode &amp; and &quot;', () => {
+    const result = parseIngredientString('sel &amp; poivre')
+    expect(result.name).toBe('sel & poivre')
+  })
 })
 
 describe('extractJsonLd', () => {

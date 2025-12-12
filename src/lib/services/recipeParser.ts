@@ -49,11 +49,38 @@ export function secureImageUrl(url: string | undefined): string | undefined {
   return url
 }
 
-// Decode HTML entities like &#39; &amp; etc. (using DOMParser for safety)
+// Common HTML entities mapping
+const HTML_ENTITIES: Record<string, string> = {
+  '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'",
+  '&nbsp;': ' ', '&eacute;': 'é', '&egrave;': 'è', '&ecirc;': 'ê', '&euml;': 'ë',
+  '&agrave;': 'à', '&acirc;': 'â', '&auml;': 'ä', '&ugrave;': 'ù', '&ucirc;': 'û',
+  '&uuml;': 'ü', '&ocirc;': 'ô', '&ouml;': 'ö', '&icirc;': 'î', '&iuml;': 'ï',
+  '&ccedil;': 'ç', '&oelig;': 'œ', '&aelig;': 'æ', '&Eacute;': 'É', '&Egrave;': 'È',
+  '&Ecirc;': 'Ê', '&Agrave;': 'À', '&Acirc;': 'Â', '&Ugrave;': 'Ù', '&Ucirc;': 'Û',
+  '&Ocirc;': 'Ô', '&Icirc;': 'Î', '&Ccedil;': 'Ç', '&deg;': '°', '&frac12;': '½',
+  '&frac14;': '¼', '&frac34;': '¾', '&rsquo;': '\u2019', '&lsquo;': '\u2018',
+  '&rdquo;': '\u201D', '&ldquo;': '\u201C', '&ndash;': '\u2013', '&mdash;': '\u2014',
+  '&hellip;': '\u2026'
+}
+
+// Decode HTML entities like &#39; &amp; &eacute; etc.
 function decodeHtmlEntities(text: string): string {
   if (!text) return text
-  const doc = new DOMParser().parseFromString(text, 'text/html')
-  return doc.body.textContent || text
+
+  // First pass: decode named entities with regex
+  let decoded = text.replace(/&[a-zA-Z]+;/g, entity => HTML_ENTITIES[entity] || entity)
+
+  // Second pass: decode numeric entities (&#233; or &#xe9;)
+  decoded = decoded.replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
+  decoded = decoded.replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+
+  // Final pass: use DOMParser for any remaining entities
+  try {
+    const doc = new DOMParser().parseFromString(decoded, 'text/html')
+    return doc.body.textContent || decoded
+  } catch {
+    return decoded
+  }
 }
 
 export interface ParsedRecipe {

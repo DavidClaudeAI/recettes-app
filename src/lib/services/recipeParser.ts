@@ -260,27 +260,20 @@ export function extractJsonLd(html: string): JsonLdItem[] {
   const scripts: JsonLdItem[] = []
   const regex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
 
-  console.log(`[Import] Recherche JSON-LD dans ${html.length} caractères de HTML`)
-
   let match
-  let count = 0
   while ((match = regex.exec(html)) !== null) {
-    count++
     try {
       const json = JSON.parse(match[1]) as JsonLdItem | JsonLdItem[]
-      console.log(`[Import] JSON-LD #${count} trouvé, type:`, Array.isArray(json) ? 'array' : (json['@type'] || 'unknown'))
       if (Array.isArray(json)) {
         scripts.push(...json)
       } else {
         scripts.push(json)
       }
-    } catch (error) {
-      // Log but continue - websites often have multiple JSON-LD scripts
-      console.warn('JSON-LD invalide ignoré:', error instanceof Error ? error.message : error)
+    } catch {
+      // Ignore invalid JSON-LD, websites often have multiple scripts
     }
   }
 
-  console.log(`[Import] Total: ${count} blocs JSON-LD trouvés, ${scripts.length} items extraits`)
   return scripts
 }
 
@@ -421,45 +414,14 @@ export async function fetchAndParseRecipe(
   onProgress?.('Chargement de la page...')
   const html = await fetchHtmlWithProxy(url)
 
-  // Debug: log first 500 chars to verify we got real HTML
-  console.log(`[Import] HTML reçu (${html.length} chars), début:`, html.substring(0, 500))
-
-  // Debug: check if ld+json exists at all in the HTML
-  const ldJsonCount = (html.match(/ld\+json/gi) || []).length
-  console.log(`[Import] Occurrences de "ld+json" dans le HTML: ${ldJsonCount}`)
-
-  // Debug: check for Marmiton-specific data
-  const mrtnMatch = html.match(/window\.Mrtn\.recipesData\s*=\s*(\[[\s\S]*?\]);/i)
-  if (mrtnMatch) {
-    console.log(`[Import] Trouvé window.Mrtn.recipesData:`, mrtnMatch[1].substring(0, 200))
-  }
-
-  // Debug: check for ingredient/step patterns in HTML (for sites without JSON-LD)
-  if (url.includes('marmiton.org')) {
-    // Look for recipe content in the HTML structure
-    const ingredientClasses = html.match(/class="[^"]*ingredient[^"]*"/gi) || []
-    const stepClasses = html.match(/class="[^"]*instruction[^"]*|class="[^"]*step[^"]*"/gi) || []
-    console.log(`[Import] Marmiton: ${ingredientClasses.length} classes ingredient, ${stepClasses.length} classes step/instruction`)
-
-    // Sample some content
-    const bodyStart = html.indexOf('<body')
-    if (bodyStart > 0) {
-      console.log(`[Import] Début du <body>:`, html.substring(bodyStart, bodyStart + 2000))
-    }
-  }
-
-  if (ldJsonCount === 0) {
-    // Log a sample around where JSON-LD typically appears
-    const headEnd = html.indexOf('</head>')
-    if (headEnd > 0) {
-      console.log(`[Import] Fin du <head> (derniers 1000 chars):`, html.substring(Math.max(0, headEnd - 1000), headEnd + 10))
-    }
-  }
-
   onProgress?.('Analyse de la recette...')
   const recipe = parseRecipeFromHtml(html, url)
 
   if (!recipe) {
+    // Provide helpful error message for known problematic sites
+    if (url.includes('marmiton.org')) {
+      throw new Error('Marmiton charge ses recettes via JavaScript, ce qui empêche l\'import automatique. Vous pouvez créer la recette manuellement.')
+    }
     throw new Error('Aucune recette schema.org trouvée sur cette page')
   }
 

@@ -427,6 +427,13 @@ export async function fetchAndParseRecipe(
   // Debug: check if ld+json exists at all in the HTML
   const ldJsonCount = (html.match(/ld\+json/gi) || []).length
   console.log(`[Import] Occurrences de "ld+json" dans le HTML: ${ldJsonCount}`)
+
+  // Debug: check for Marmiton-specific data
+  const mrtnMatch = html.match(/window\.Mrtn\.recipesData\s*=\s*(\[[\s\S]*?\]);/i)
+  if (mrtnMatch) {
+    console.log(`[Import] Trouvé window.Mrtn.recipesData:`, mrtnMatch[1].substring(0, 200))
+  }
+
   if (ldJsonCount === 0) {
     // Log a sample around where JSON-LD typically appears
     const headEnd = html.indexOf('</head>')

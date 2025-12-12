@@ -424,6 +424,17 @@ export async function fetchAndParseRecipe(
   // Debug: log first 500 chars to verify we got real HTML
   console.log(`[Import] HTML reçu (${html.length} chars), début:`, html.substring(0, 500))
 
+  // Debug: check if ld+json exists at all in the HTML
+  const ldJsonCount = (html.match(/ld\+json/gi) || []).length
+  console.log(`[Import] Occurrences de "ld+json" dans le HTML: ${ldJsonCount}`)
+  if (ldJsonCount === 0) {
+    // Log a sample around where JSON-LD typically appears
+    const headEnd = html.indexOf('</head>')
+    if (headEnd > 0) {
+      console.log(`[Import] Fin du <head> (derniers 1000 chars):`, html.substring(Math.max(0, headEnd - 1000), headEnd + 10))
+    }
+  }
+
   onProgress?.('Analyse de la recette...')
   const recipe = parseRecipeFromHtml(html, url)
 

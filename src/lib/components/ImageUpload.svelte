@@ -32,6 +32,14 @@
     reader.readAsDataURL(file)
   }
 
+  // Check WebP support once
+  const supportsWebP = (() => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1
+    canvas.height = 1
+    return canvas.toDataURL('image/webp').startsWith('data:image/webp')
+  })()
+
   function compressImage(dataUrl: string, maxWidth: number, quality: number): Promise<string> {
     return new Promise((resolve) => {
       const img = new Image()
@@ -40,9 +48,15 @@
         let width = img.width
         let height = img.height
 
+        // Also limit height to avoid very tall images
+        const maxHeight = 600
         if (width > maxWidth) {
           height = (height * maxWidth) / width
           width = maxWidth
+        }
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height
+          height = maxHeight
         }
 
         canvas.width = width
@@ -51,7 +65,9 @@
         const ctx = canvas.getContext('2d')
         ctx?.drawImage(img, 0, 0, width, height)
 
-        resolve(canvas.toDataURL('image/jpeg', quality))
+        // Use WebP if supported (30-50% smaller), fallback to JPEG
+        const format = supportsWebP ? 'image/webp' : 'image/jpeg'
+        resolve(canvas.toDataURL(format, quality))
       }
       img.src = dataUrl
     })
@@ -128,7 +144,7 @@
     >
       <span class="drop-icon">📷</span>
       <span class="drop-text">Cliquez ou glissez une image</span>
-      <span class="drop-hint">JPG, PNG (max 2 Mo)</span>
+      <span class="drop-hint">JPG, PNG, WebP (max 2 Mo)</span>
     </button>
   {/if}
 </div>

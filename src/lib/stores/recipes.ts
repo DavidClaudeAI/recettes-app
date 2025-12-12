@@ -1,7 +1,23 @@
-import { writable, derived } from 'svelte/store'
+import { writable, derived, type Readable } from 'svelte/store'
 import { v4 as uuidv4 } from 'uuid'
 import type { Recipe, RecipeMetadata, RecipeWithMeta, RecipeStatus } from '../types'
 import * as dataService from '../services/dataService'
+
+// Debounce helper for stores
+function debounceStore<T>(store: Readable<T>, delay: number): Readable<T> {
+  let timeout: ReturnType<typeof setTimeout>
+  let initialValue: T
+
+  // Get initial value synchronously
+  const unsubscribe = store.subscribe(v => { initialValue = v })
+  unsubscribe()
+
+  return derived(store, ($value, set) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => set($value), delay)
+    return () => clearTimeout(timeout)
+  }, initialValue!)
+}
 
 // Main store for recipes with metadata
 const recipesStore = writable<RecipeWithMeta[]>([])
@@ -10,13 +26,14 @@ const errorStore = writable<string | null>(null)
 
 // Filters
 const searchQueryStore = writable('')
+const debouncedSearchStore = debounceStore(searchQueryStore, 300)
 const statusFilterStore = writable<RecipeStatus | null>(null)
 const tagsFilterStore = writable<string[]>([])
 const minRatingStore = writable<number | null>(null)
 
-// Derived store for filtered recipes
+// Derived store for filtered recipes (uses debounced search for performance)
 export const filteredRecipes = derived(
-  [recipesStore, searchQueryStore, statusFilterStore, tagsFilterStore, minRatingStore],
+  [recipesStore, debouncedSearchStore, statusFilterStore, tagsFilterStore, minRatingStore],
   ([$recipes, $search, $status, $tags, $minRating]) => {
     let result = $recipes
 

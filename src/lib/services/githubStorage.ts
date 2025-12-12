@@ -22,14 +22,14 @@ const CONFIG_KEY = 'github-token'
 const DATA_PATH = 'data'
 
 // UTF-8 safe Base64 encoding/decoding (replaces deprecated unescape/escape)
-function encodeBase64Utf8(content: string): string {
+export function encodeBase64Utf8(content: string): string {
   const encoder = new TextEncoder()
   const bytes = encoder.encode(content)
   const binString = Array.from(bytes, b => String.fromCharCode(b)).join('')
   return btoa(binString)
 }
 
-function decodeBase64Utf8(base64: string): string {
+export function decodeBase64Utf8(base64: string): string {
   const binString = atob(base64.replace(/\n/g, ''))
   const bytes = Uint8Array.from(binString, c => c.charCodeAt(0))
   const decoder = new TextDecoder()

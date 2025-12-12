@@ -260,10 +260,15 @@ export function extractJsonLd(html: string): JsonLdItem[] {
   const scripts: JsonLdItem[] = []
   const regex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
 
+  console.log(`[Import] Recherche JSON-LD dans ${html.length} caractères de HTML`)
+
   let match
+  let count = 0
   while ((match = regex.exec(html)) !== null) {
+    count++
     try {
       const json = JSON.parse(match[1]) as JsonLdItem | JsonLdItem[]
+      console.log(`[Import] JSON-LD #${count} trouvé, type:`, Array.isArray(json) ? 'array' : (json['@type'] || 'unknown'))
       if (Array.isArray(json)) {
         scripts.push(...json)
       } else {
@@ -275,6 +280,7 @@ export function extractJsonLd(html: string): JsonLdItem[] {
     }
   }
 
+  console.log(`[Import] Total: ${count} blocs JSON-LD trouvés, ${scripts.length} items extraits`)
   return scripts
 }
 
@@ -414,6 +420,9 @@ export async function fetchAndParseRecipe(
 ): Promise<ParsedRecipe> {
   onProgress?.('Chargement de la page...')
   const html = await fetchHtmlWithProxy(url)
+
+  // Debug: log first 500 chars to verify we got real HTML
+  console.log(`[Import] HTML reçu (${html.length} chars), début:`, html.substring(0, 500))
 
   onProgress?.('Analyse de la recette...')
   const recipe = parseRecipeFromHtml(html, url)

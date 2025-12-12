@@ -88,8 +88,12 @@
     "tags": [
       "asiatique"
     ],
-    "history": [],
-    "rating": 4
+    "history": [
+      {
+        "date": "2025-12-12T18:18:29.674Z",
+        "notes": "A améliorer"
+      }
+    ]
   },
   {
     "id": "c7687c91-a37e-48b9-8d53-0889f59db2a3",

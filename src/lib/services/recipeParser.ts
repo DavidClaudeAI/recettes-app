@@ -1,5 +1,42 @@
 import type { Ingredient } from '../types'
 
+// JSON-LD Schema.org types
+interface JsonLdItem {
+  '@type'?: string | string[]
+  '@graph'?: JsonLdItem[]
+  text?: string
+  description?: string
+  name?: string
+  itemListElement?: JsonLdItem[]
+  [key: string]: unknown
+}
+
+interface HowToStep extends JsonLdItem {
+  '@type': 'HowToStep' | string[]
+  text?: string
+  description?: string
+  name?: string
+}
+
+interface HowToSection extends JsonLdItem {
+  '@type': 'HowToSection' | string[]
+  itemListElement?: HowToStep[]
+}
+
+interface RecipeSchema extends JsonLdItem {
+  '@type': 'Recipe' | string[]
+  name?: string
+  prepTime?: string
+  cookTime?: string
+  recipeYield?: string | number | string[]
+  recipeIngredient?: string[]
+  recipeInstructions?: InstructionItem[] | string
+  recipeSteps?: InstructionItem[] | string
+  image?: string | string[] | { url?: string }
+}
+
+type InstructionItem = string | HowToStep | HowToSection
+
 // Upgrade HTTP URLs to HTTPS to avoid mixed content issues
 export function secureImageUrl(url: string | undefined): string | undefined {
   if (!url) return url
@@ -146,7 +183,7 @@ function normalizeUnit(unit: string): string {
 }
 
 // Check if type matches (handles prefixes like "schema:HowToStep")
-function isType(item: any, typeName: string): boolean {
+function isType(item: JsonLdItem, typeName: string): boolean {
   const type = item['@type']
   if (!type) return false
   if (Array.isArray(type)) {
@@ -156,18 +193,18 @@ function isType(item: any, typeName: string): boolean {
 }
 
 // Parse instructions from various formats
-function parseInstructions(instructions: any): string[] {
+function parseInstructions(instructions: InstructionItem[] | string | JsonLdItem | undefined): string[] {
   if (!instructions) return []
 
   // Array of items
   if (Array.isArray(instructions)) {
-    return instructions.flatMap(item => {
+    return instructions.flatMap((item: InstructionItem) => {
       if (typeof item === 'string') return [decodeHtmlEntities(item)]
       if (isType(item, 'HowToStep')) {
         return [decodeHtmlEntities(item.text || item.description || item.name || '')]
       }
       if (isType(item, 'HowToSection')) {
-        return parseInstructions(item.itemListElement)
+        return parseInstructions(item.itemListElement as InstructionItem[])
       }
       // Object without @type but with text
       if (item.text) return [decodeHtmlEntities(item.text)]
@@ -192,21 +229,22 @@ function parseInstructions(instructions: any): string[] {
 }
 
 // Extract JSON-LD from HTML
-export function extractJsonLd(html: string): any[] {
-  const scripts: any[] = []
+export function extractJsonLd(html: string): JsonLdItem[] {
+  const scripts: JsonLdItem[] = []
   const regex = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
 
   let match
   while ((match = regex.exec(html)) !== null) {
     try {
-      const json = JSON.parse(match[1])
+      const json = JSON.parse(match[1]) as JsonLdItem | JsonLdItem[]
       if (Array.isArray(json)) {
         scripts.push(...json)
       } else {
         scripts.push(json)
       }
-    } catch (e) {
-      // Ignore invalid JSON
+    } catch (error) {
+      // Log but continue - websites often have multiple JSON-LD scripts
+      console.warn('JSON-LD invalide ignoré:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -214,10 +252,10 @@ export function extractJsonLd(html: string): any[] {
 }
 
 // Find Recipe schema in JSON-LD
-function findRecipeSchema(jsonLdList: any[]): any | null {
+function findRecipeSchema(jsonLdList: JsonLdItem[]): RecipeSchema | null {
   for (const item of jsonLdList) {
     if (isType(item, 'Recipe')) {
-      return item
+      return item as RecipeSchema
     }
     if (item['@graph']) {
       const found = findRecipeSchema(item['@graph'])
@@ -246,9 +284,19 @@ async function fetchImageAsBase64(imageUrl: string): Promise<string | undefined>
       reader.onerror = () => resolve(undefined)
       reader.readAsDataURL(blob)
     })
-  } catch {
+  } catch (error) {
+    console.warn('Échec du téléchargement de l\'image:', imageUrl, error instanceof Error ? error.message : error)
     return undefined
   }
+}
+
+// Extract image URL from various schema formats
+function extractImageUrl(image: string | string[] | { url?: string } | undefined): string | undefined {
+  if (!image) return undefined
+  if (Array.isArray(image)) return image[0]
+  if (typeof image === 'object' && image.url) return image.url
+  if (typeof image === 'string') return image
+  return undefined
 }
 
 // Main parsing function
@@ -264,16 +312,14 @@ export function parseRecipeFromHtml(html: string, sourceUrl: string): ParsedReci
   const steps = parseInstructions(recipeSchema.recipeInstructions || recipeSchema.recipeSteps)
 
   return {
-    title: decodeHtmlEntities(recipeSchema.name) || 'Recette sans titre',
+    title: decodeHtmlEntities(recipeSchema.name || '') || 'Recette sans titre',
     source: sourceUrl,
     prepTime: parseDuration(recipeSchema.prepTime),
     cookTime: parseDuration(recipeSchema.cookTime),
     servings: parseServings(recipeSchema.recipeYield),
     ingredients,
     steps,
-    image: Array.isArray(recipeSchema.image)
-      ? recipeSchema.image[0]
-      : recipeSchema.image?.url || recipeSchema.image
+    image: extractImageUrl(recipeSchema.image)
   }
 }
 

@@ -3,10 +3,24 @@
 
 import * as local from './storage'
 import * as github from './githubStorage'
+import type { GitHubConfig } from './githubStorage'
 import type { Recipe, RecipeMetadata, RecipeWithMeta } from '../types'
 
 export type { ShoppingList, ShoppingItem, ShoppingListStatus, PlanningEntry, ExportData } from './storage'
 export { isGitHubConfigured, getGitHubConfig, saveGitHubConfig, clearGitHubConfig, testGitHubConnection, initializeDataFolder } from './githubStorage'
+
+// Helper to route between local and GitHub storage
+async function withStorage<T, Args extends unknown[]>(
+  localFn: (...args: Args) => Promise<T>,
+  githubFn: (config: GitHubConfig, ...args: Args) => Promise<T>,
+  ...args: Args
+): Promise<T> {
+  const config = github.getGitHubConfig()
+  if (config) {
+    return githubFn(config, ...args)
+  }
+  return localFn(...args)
+}
 
 // Get the current storage mode
 export function getStorageMode(): 'local' | 'github' {
@@ -15,37 +29,17 @@ export function getStorageMode(): 'local' | 'github' {
 
 // ============ RECIPES ============
 
-export async function getAllRecipes(): Promise<Recipe[]> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getAllRecipes(config)
-  }
-  return local.getAllRecipes()
-}
+export const getAllRecipes = () =>
+  withStorage(local.getAllRecipes, github.getAllRecipes)
 
-export async function getRecipe(id: string): Promise<Recipe | undefined> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getRecipe(config, id)
-  }
-  return local.getRecipe(id)
-}
+export const getRecipe = (id: string) =>
+  withStorage(local.getRecipe, github.getRecipe, id)
 
-export async function saveRecipe(recipe: Recipe): Promise<void> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.saveRecipe(config, recipe)
-  }
-  return local.saveRecipe(recipe)
-}
+export const saveRecipe = (recipe: Recipe) =>
+  withStorage(local.saveRecipe, github.saveRecipe, recipe)
 
-export async function deleteRecipe(id: string): Promise<void> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.deleteRecipe(config, id)
-  }
-  return local.deleteRecipe(id)
-}
+export const deleteRecipe = (id: string) =>
+  withStorage(local.deleteRecipe, github.deleteRecipe, id)
 
 export async function saveAllRecipes(recipes: Recipe[]): Promise<void> {
   const config = github.getGitHubConfig()
@@ -60,133 +54,58 @@ export async function saveAllRecipes(recipes: Recipe[]): Promise<void> {
 
 // ============ METADATA ============
 
-export async function getMetadata(id: string): Promise<RecipeMetadata | undefined> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getMetadata(config, id)
-  }
-  return local.getMetadata(id)
-}
+export const getMetadata = (id: string) =>
+  withStorage(local.getMetadata, github.getMetadata, id)
 
-export async function getAllMetadata(): Promise<RecipeMetadata[]> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getAllMetadata(config)
-  }
-  return local.getAllMetadata()
-}
+export const getAllMetadata = () =>
+  withStorage(local.getAllMetadata, github.getAllMetadata)
 
-export async function saveMetadata(metadata: RecipeMetadata): Promise<void> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.saveMetadata(config, metadata)
-  }
-  return local.saveMetadata(metadata)
-}
+export const saveMetadata = (metadata: RecipeMetadata) =>
+  withStorage(local.saveMetadata, github.saveMetadata, metadata)
 
-export async function createDefaultMetadata(recipeId: string): Promise<RecipeMetadata> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.createDefaultMetadata(config, recipeId)
-  }
-  return local.createDefaultMetadata(recipeId)
-}
+export const createDefaultMetadata = (recipeId: string) =>
+  withStorage(local.createDefaultMetadata, github.createDefaultMetadata, recipeId)
 
 // ============ COMBINED ============
 
-export async function getRecipeWithMeta(id: string): Promise<RecipeWithMeta | undefined> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getRecipeWithMeta(config, id)
-  }
-  return local.getRecipeWithMeta(id)
-}
+export const getRecipeWithMeta = (id: string) =>
+  withStorage(local.getRecipeWithMeta, github.getRecipeWithMeta, id)
 
-export async function getAllRecipesWithMeta(): Promise<RecipeWithMeta[]> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getAllRecipesWithMeta(config)
-  }
-  return local.getAllRecipesWithMeta()
-}
+export const getAllRecipesWithMeta = () =>
+  withStorage(local.getAllRecipesWithMeta, github.getAllRecipesWithMeta)
 
 // ============ PLANNING ============
 
-export async function getPlanningForWeek(weekStart: string): Promise<local.PlanningEntry[]> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getPlanningForWeek(config, weekStart)
-  }
-  return local.getPlanningForWeek(weekStart)
-}
+export const getPlanningForWeek = (weekStart: string) =>
+  withStorage(local.getPlanningForWeek, github.getPlanningForWeek, weekStart)
 
-export async function savePlanningEntry(entry: local.PlanningEntry): Promise<void> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.savePlanningEntry(config, entry)
-  }
-  return local.savePlanningEntry(entry)
-}
+export const savePlanningEntry = (entry: local.PlanningEntry) =>
+  withStorage(local.savePlanningEntry, github.savePlanningEntry, entry)
 
-export async function deletePlanningEntry(id: string): Promise<void> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.deletePlanningEntry(config, id)
-  }
-  return local.deletePlanningEntry(id)
-}
+export const deletePlanningEntry = (id: string) =>
+  withStorage(local.deletePlanningEntry, github.deletePlanningEntry, id)
 
 // ============ SHOPPING LISTS ============
 
-export async function getAllShoppingLists(): Promise<local.ShoppingList[]> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getAllShoppingLists(config)
-  }
-  return local.getAllShoppingLists()
-}
+export const getAllShoppingLists = () =>
+  withStorage(local.getAllShoppingLists, github.getAllShoppingLists)
 
-export async function getShoppingList(id: string): Promise<local.ShoppingList | undefined> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.getShoppingList(config, id)
-  }
-  return local.getShoppingList(id)
-}
+export const getShoppingList = (id: string) =>
+  withStorage(local.getShoppingList, github.getShoppingList, id)
 
-export async function saveShoppingList(list: local.ShoppingList): Promise<void> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.saveShoppingList(config, list)
-  }
-  return local.saveShoppingList(list)
-}
+export const saveShoppingList = (list: local.ShoppingList) =>
+  withStorage(local.saveShoppingList, github.saveShoppingList, list)
 
-export async function deleteShoppingList(id: string): Promise<void> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.deleteShoppingList(config, id)
-  }
-  return local.deleteShoppingList(id)
-}
+export const deleteShoppingList = (id: string) =>
+  withStorage(local.deleteShoppingList, github.deleteShoppingList, id)
 
 // ============ EXPORT / IMPORT ============
 
-export async function exportAllData(): Promise<local.ExportData> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.exportAllData(config)
-  }
-  return local.exportAllData()
-}
+export const exportAllData = () =>
+  withStorage(local.exportAllData, github.exportAllData)
 
-export async function importAllData(data: local.ExportData): Promise<void> {
-  const config = github.getGitHubConfig()
-  if (config) {
-    return github.importAllData(config, data)
-  }
-  return local.importAllData(data)
-}
+export const importAllData = (data: local.ExportData) =>
+  withStorage(local.importAllData, github.importAllData, data)
 
 // ============ MIGRATION ============
 

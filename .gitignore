@@ -1,3 +1,6 @@
+# Data files (managed via GitHub API, not local commits)
+data/
+
 # Logs
 logs
 *.log
